@@ -1,0 +1,22 @@
+Hold down the following keys while clicking on the mission to customize.
+
+
+Shift + Ctrl: Reset settings
+Q: Assign the first fleet to the fleet in your clipboard
+W: Assign the second fleet to the fleet in your clipboard
+F: Flip sides
+Z: Next map layout
+T: Toggle 1-100x speed-up
+A: Ai retreat allowed
+
+During the battle, the following keys can be pressed.
+
+Alt: Disable Free-Cam and return to vanilla camera
+C: Enable/switch Free-Cam modes
+Left-Click: Zoom In (Free-Cam)
+Right-Click: Zoom Out (Free-Cam)
+Right-Ctrl: Hide/show ship UI
+
+In Free-Cam mode, you no longer need to jump from ship-to-ship to watch the battle; the camera is completely free.
+- Drag Free-Cam smoothly pans the camera in the direction of your mouse.
+- Absolute Free-Cam directly ties the camera to your mouse movements.

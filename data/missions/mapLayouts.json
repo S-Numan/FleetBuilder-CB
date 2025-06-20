@@ -1,0 +1,74 @@
+{
+    "layouts":[
+        {
+            "name":"default_no_objective",
+            "mapHeightMult":0.3333,
+            "minX":-9000,
+            "maxX":9000,
+            "minY":-9000,
+            "maxY":9000,
+            "standoffRange":6000,
+            "objectives":[]
+        },
+        {
+            "name":"default_square",
+            "mapHeightMult":0.7,
+            "minX":-12000,
+            "maxX":12000,
+            "minY":-9000,
+            "maxY":9000,
+            "standoffRange":13500,
+            "objectives":[
+                ["comm_relay", -5000, -3000],
+                ["sensor_array", 5000, -3000],
+                ["sensor_array", -5000, 3000],
+                ["comm_relay", 5000, 3000]
+            ]
+        },
+        {
+            "name":"default_diamond",
+            "mapHeightMult":0.7,
+            "minX":-12000,
+            "maxX":12000,
+            "minY":-9000,
+            "maxY":9000,
+            "standoffRange":13500,
+            "objectives":[
+                ["comm_relay", 0, -3000],
+                ["nav_buoy", -5000, 0],
+                ["nav_buoy", 5000, 0],
+                ["comm_relay", 0, 3000]
+            ]
+        },
+        {
+            "name":"default_slash",
+            "mapHeightMult":0.7,
+            "minX":-12000,
+            "maxX":12000,
+            "minY":-9000,
+            "maxY":9000,
+            "standoffRange":13500,
+            "objectives":[
+                ["comm_relay", -5000, -3000],
+                ["nav_buoy", 2000, -1200],
+                ["nav_buoy", -2000, 1200],
+                ["comm_relay", 5000, 3000]
+            ]
+        },
+        {
+            "name":"default_backslash",
+            "mapHeightMult":0.7,
+            "minX":-12000,
+            "maxX":12000,
+            "minY":-9000,
+            "maxY":9000,
+            "standoffRange":13500,
+            "objectives":[
+                ["comm_relay", 5000, -3000],
+                ["nav_buoy", -2000, -1200],
+                ["nav_buoy", 2000, 1200],
+                ["comm_relay", -5000, 3000]
+            ]
+        }
+    ]
+}
