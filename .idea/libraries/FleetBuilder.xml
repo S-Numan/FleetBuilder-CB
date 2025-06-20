@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="FleetBuilder">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../FleetBuilder/jars/FleetBuilder.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
