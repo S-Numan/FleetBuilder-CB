@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/FleetBuilderCB.iml" filepath="$PROJECT_DIR$/FleetBuilderCB.iml" />
+      <module fileurl="file://$PROJECT_DIR$/FleetBuilder-CB.iml" filepath="$PROJECT_DIR$/FleetBuilder-CB.iml" />
     </modules>
   </component>
 </project>

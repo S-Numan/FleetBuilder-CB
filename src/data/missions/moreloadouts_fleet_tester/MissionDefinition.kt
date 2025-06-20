@@ -14,19 +14,17 @@ import com.fs.starfarer.api.mission.FleetSide
 import com.fs.starfarer.api.mission.MissionDefinitionAPI
 import com.fs.starfarer.api.mission.MissionDefinitionPlugin
 import com.fs.starfarer.api.util.Misc
-import fleetBuilder.Clipboard.getClipboardJson
-import fleetBuilder.misc.MISC
-import fleetBuilder.misc.MISC.createErrorVariant
-import fleetBuilder.misc.MISC.showError
-import fleetBuilder.serialization.OfficerSerialization.getOfficerFromJson
-import fleetBuilder.serialization.OfficerSerialization.saveOfficerToJson
+import fleetBuilder.persistence.OfficerSerialization.getOfficerFromJson
+import fleetBuilder.persistence.OfficerSerialization.saveOfficerToJson
+import fleetBuilder.util.ClipboardUtil.getClipboardJson
+import fleetBuilder.util.MISC
+import fleetBuilder.util.MISC.createErrorVariant
+import fleetBuilder.util.MISC.showError
 import fleetBuilderCB.customDir
 import fleetBuilderCB.defaultFleetFile
 import org.json.JSONObject
-import org.lazywizard.lazylib.ext.campaign.addShip
 import org.lazywizard.lazylib.ext.json.iterator
 import org.lwjgl.input.Keyboard
-import org.magiclib.kotlin.getPersonalityName
 import java.util.*
 
 

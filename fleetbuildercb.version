@@ -1,0 +1,17 @@
+{
+  "masterVersionFile": "https://raw.githubusercontent.com/S-Numan/FleetBuilder/master/fleetbuilder.version",
+
+  "modName": "Fleet Builder",
+  "modVersion":
+    {
+      "major": 1,
+      "minor": 0,
+      "patch": 1 # Can be a number, character or string (1, 2, a, b, "-RC2", etc)
+    },
+
+  #"modThreadId": 0,
+
+  "directDownloadURL": "https://github.com/S-Numan/FleetBuilder/releases/latest/download/FleetBuilder.zip",
+
+  "changelogURL": "https://raw.githubusercontent.com/S-Numan/FleetBuilder/master/CHANGELOGS.md",
+}
