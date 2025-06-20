@@ -1,5 +1,5 @@
 {
-  "masterVersionFile": "https://raw.githubusercontent.com/S-Numan/FleetBuilder/master/fleetbuilder.version",
+  "masterVersionFile": "https://raw.githubusercontent.com/S-Numan/FleetBuilder-CB/master/fleetbuildercb.version",
 
   "modName": "Fleet Builder",
   "modVersion":
@@ -11,7 +11,7 @@
 
   #"modThreadId": 0,
 
-  "directDownloadURL": "https://github.com/S-Numan/FleetBuilder/releases/latest/download/FleetBuilder.zip",
+  "directDownloadURL": "https://github.com/S-Numan/FleetBuilder-CB/releases/latest/download/FleetBuilder-CB.zip",
 
-  "changelogURL": "https://raw.githubusercontent.com/S-Numan/FleetBuilder/master/CHANGELOGS.md",
+  #"changelogURL": "https://raw.githubusercontent.com/S-Numan/FleetBuilder-CB/master/CHANGELOGS.md",
 }
