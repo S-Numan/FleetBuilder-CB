@@ -14,8 +14,7 @@ import com.fs.starfarer.api.mission.FleetSide
 import com.fs.starfarer.api.mission.MissionDefinitionAPI
 import com.fs.starfarer.api.mission.MissionDefinitionPlugin
 import com.fs.starfarer.api.util.Misc
-import fleetBuilder.persistence.OfficerSerialization.getOfficerFromJson
-import fleetBuilder.persistence.OfficerSerialization.saveOfficerToJson
+import fleetBuilder.persistence.PersonSerialization
 import fleetBuilder.util.ClipboardUtil.getClipboardJson
 import fleetBuilder.util.MISC
 import fleetBuilder.util.MISC.createErrorVariant
@@ -262,8 +261,8 @@ class MissionDefinition : MissionDefinitionPlugin {
         //The commander must not be piloting a ship, and the flagship must not exist. If either of these are false, the game crashes on entering the mission.
 
         //Make copy of commander, and assign them to be the commander
-        val tempCommander = saveOfficerToJson(fleet.commander,false)
-        fleet.commander = getOfficerFromJson(tempCommander)
+        val tempCommander = PersonSerialization.savePersonToJson(fleet.commander)
+        fleet.commander = PersonSerialization.getPersonFromJson(tempCommander)
 
         var hasDefaultOfficer = false
 
