@@ -86,7 +86,7 @@ class MissionDefinition : MissionDefinitionPlugin {
                 json,
                 faction = factionId,
                 settings = FleetSerialization.FleetSettings().apply {
-                    includeCommanderSetFlagship = false
+                    //   includeCommanderSetFlagship = false
                 }
             )
             for (member in fleet.fleetData.membersListCopy) {
@@ -258,7 +258,7 @@ class MissionDefinition : MissionDefinitionPlugin {
             memberList.sortWith(Collections.reverseOrder(HullSizeComparator()))
         }
 
-        //The commander must not be piloting a ship, and the flagship must not exist. If either of these are false, the game crashes on entering the mission.
+        //The commander must not be piloting a ship, otherwise the game crashes on entering the mission.
 
         //Make copy of commander, and assign them to be the commander
         val tempCommander = PersonSerialization.savePersonToJson(fleet.commander)
