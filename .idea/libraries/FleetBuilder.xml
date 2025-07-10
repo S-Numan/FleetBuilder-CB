@@ -4,6 +4,8 @@
       <root url="jar://$PROJECT_DIR$/../FleetBuilder/jars/FleetBuilder.jar!/" />
     </CLASSES>
     <JAVADOC />
-    <SOURCES />
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/../FleetBuilder/src/fleetBuilder" />
+    </SOURCES>
   </library>
 </component>

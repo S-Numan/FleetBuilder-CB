@@ -14,6 +14,7 @@ import com.fs.starfarer.api.mission.FleetSide
 import com.fs.starfarer.api.mission.MissionDefinitionAPI
 import com.fs.starfarer.api.mission.MissionDefinitionPlugin
 import com.fs.starfarer.api.util.Misc
+import fleetBuilder.persistence.FleetSerialization
 import fleetBuilder.persistence.PersonSerialization
 import fleetBuilder.util.ClipboardUtil.getClipboardJson
 import fleetBuilder.util.MISC
@@ -84,10 +85,9 @@ class MissionDefinition : MissionDefinitionPlugin {
             val fleet = MISC.createFleetFromJson(
                 json,
                 faction = factionId,
-                includeOfficers = true,
-                includeCommander = true,
-                includeNoOfficerPersonality = true,
-                setFlagship = false
+                settings = FleetSerialization.FleetSettings().apply {
+                    includeCommanderSetFlagship = false
+                }
             )
             for (member in fleet.fleetData.membersListCopy) {
                 //val clone = member.variant.clone()
