@@ -2,11 +2,10 @@ package fleetBuilderCB
 
 import com.fs.starfarer.api.BaseModPlugin
 import com.fs.starfarer.api.Global
-import fleetBuilder.variants.LoadoutManager.fleetDir
-import fleetBuilder.variants.LoadoutManager.primaryDir
+import fleetBuilder.config.ModSettings.PRIMARYDIR
 import org.json.JSONObject
 
-const val customDir = (primaryDir + "CustomBattle/")
+const val customDir = (PRIMARYDIR + "CustomBattle/")
 const val defaultFleetFile = "defaultFleets"
 
 class FleetBuilderCBPlugin : BaseModPlugin() {
@@ -16,8 +15,8 @@ class FleetBuilderCBPlugin : BaseModPlugin() {
 
         if(!Global.getSettings().fileExistsInCommon(customDir + defaultFleetFile)) {
             val defaultFleets = JSONObject()
-            defaultFleets.put("firstFleet", "data/fleets/Vanilla/TritachyonPatrol.json")
-            defaultFleets.put("secondFleet", "data/fleets/Vanilla/HegemonyFastPicket.json")
+            defaultFleets.put("firstFleet", "data/fleets/VanillaFleets/BaseGame/TritachyonPatrol.json")
+            defaultFleets.put("secondFleet", "data/fleets/VanillaFleets/BaseGame/HegemonyFastPicket.json")
 
             Global.getSettings().writeJSONToCommon(customDir + defaultFleetFile, defaultFleets, false)
         }
