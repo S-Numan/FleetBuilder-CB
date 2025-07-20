@@ -17,9 +17,9 @@ import com.fs.starfarer.api.util.Misc
 import fleetBuilder.persistence.FleetSerialization
 import fleetBuilder.persistence.PersonSerialization
 import fleetBuilder.util.ClipboardUtil.getClipboardJson
-import fleetBuilder.util.MISC
-import fleetBuilder.util.MISC.createErrorVariant
-import fleetBuilder.util.MISC.showError
+import fleetBuilder.util.DisplayMessage
+import fleetBuilder.util.FBMisc
+import fleetBuilder.variants.VariantLib
 import fleetBuilderCB.customDir
 import fleetBuilderCB.defaultFleetFile
 import org.json.JSONObject
@@ -62,10 +62,11 @@ class MissionDefinition : MissionDefinitionPlugin {
 
             playerFleetJson = Global.getSettings().loadJSON(defaultFleetsJson.getString("firstFleet"))
             enemyFleetJson = Global.getSettings().loadJSON(defaultFleetsJson.getString("secondFleet"))
-        } catch(_: Exception) {}
+        } catch (_: Exception) {
+        }
 
         layoutConfigChoices.clear()
-        if(layoutConfigChoices.isEmpty()) {
+        if (layoutConfigChoices.isEmpty()) {
             val json = Global.getSettings().loadJSON("data/missions/mapLayouts.json")
             val jsonArray = json.getJSONArray("layouts")
             for (layout in jsonArray) {
@@ -82,28 +83,28 @@ class MissionDefinition : MissionDefinitionPlugin {
     }
 
     private fun loadFleetFromJson(json: JSONObject, factionId: String): CampaignFleetAPI {
-            val fleet = MISC.createFleetFromJson(
-                json,
-                faction = factionId,
-                settings = FleetSerialization.FleetSettings().apply {
-                    //   includeCommanderSetFlagship = false
-                }
-            )
-            for (member in fleet.fleetData.membersListCopy) {
-                //val clone = member.variant.clone()
-                //clone.hullVariantId += "_clone"
-                //member.setVariant(clone, false, false)
-                member.variant.addPermaMod("SCVE_officerdetails_X")
+        val fleet = FBMisc.createFleetFromJson(
+            json,
+            faction = factionId,
+            settings = FleetSerialization.FleetSettings().apply {
+                //   includeCommanderSetFlagship = false
             }
+        )
+        for (member in fleet.fleetData.membersListCopy) {
+            //val clone = member.variant.clone()
+            //clone.hullVariantId += "_clone"
+            //member.setVariant(clone, false, false)
+            member.variant.addPermaMod("SCVE_officerdetails_X")
+        }
 
-            return fleet
+        return fleet
     }
 
     override fun defineMission(api: MissionDefinitionAPI) {
-        if(!init)
+        if (!init)
             init()
-        if(!init) {
-            showError("Mission init failed")
+        if (!init) {
+            DisplayMessage.showError("Mission init failed")
             return
         }
 
@@ -135,7 +136,7 @@ class MissionDefinition : MissionDefinitionPlugin {
         // Try to fetch clipboard fleet data if relevant keys are pressed
         val clipboardJson = if (qDown || wDown) getClipboardJson().also {
             if (it == null) {
-                showError("No valid fleet data found in clipboard")
+                DisplayMessage.showError("No valid fleet data found in clipboard")
             }
         } else null
 
@@ -152,15 +153,15 @@ class MissionDefinition : MissionDefinitionPlugin {
         // Validate fleets
         if (playerFleet.fleetSizeCount == 0) {
             val fleet = Global.getFactory().createEmptyFleet(Factions.PLAYER, FleetTypes.TASK_FORCE, true)
-            fleet.fleetData.addFleetMember(Global.getSettings().createFleetMember(FleetMemberType.SHIP, createErrorVariant()))
+            fleet.fleetData.addFleetMember(Global.getSettings().createFleetMember(FleetMemberType.SHIP, VariantLib.createErrorVariant()))
             playerFleet = fleet
-            showError("Failed to create player fleet")
+            DisplayMessage.showError("Failed to create player fleet")
         }
         if (enemyFleet.fleetSizeCount == 0) {
             val fleet = Global.getFactory().createEmptyFleet(Factions.PLAYER, FleetTypes.TASK_FORCE, true)
-            fleet.fleetData.addFleetMember(Global.getSettings().createFleetMember(FleetMemberType.SHIP, createErrorVariant()))
+            fleet.fleetData.addFleetMember(Global.getSettings().createFleetMember(FleetMemberType.SHIP, VariantLib.createErrorVariant()))
             enemyFleet = fleet
-            showError("Failed to create enemy fleet ")
+            DisplayMessage.showError("Failed to create enemy fleet ")
         }
 
         // Choose fleet sides based on flipSide flag
@@ -173,7 +174,7 @@ class MissionDefinition : MissionDefinitionPlugin {
         playerFleetJson.put("mapHeightMult", pickedLayout.getDouble("mapHeightMult"))
         enemyFleetJson.put("mapHeightMult", pickedLayout.getDouble("mapHeightMult"))
 
-        if(forceDeployAll) {
+        if (forceDeployAll) {
             api.addPlugin(AIBattlesMini_Util.getDeploymentPlugin(playerFleetJson, enemyFleetJson))
         } else {
             //
@@ -193,23 +194,23 @@ class MissionDefinition : MissionDefinitionPlugin {
         if (flipSide) {
             optionBrief += "Flipped Player and Enemy Sides, "
         }
-        if(aiRetreatAllowed) {
+        if (aiRetreatAllowed) {
             optionBrief += "AI retreat allowed, "
         }
-        if(!forceDeployAll) {
+        if (!forceDeployAll) {
             optionBrief += "Not force deploying entire fleet, "
         }
 
-            /*
-        val layoutsDescription = buildString {
-            append("Available layouts:\n")
-            for ((index, obj) in layoutConfigChoices.withIndex()) {
-                val layoutName = obj.optString("layout", "Unnamed")
-                append("  ${index + 1}. $layoutName\n")
-            }
+        /*
+    val layoutsDescription = buildString {
+        append("Available layouts:\n")
+        for ((index, obj) in layoutConfigChoices.withIndex()) {
+            val layoutName = obj.optString("layout", "Unnamed")
+            append("  ${index + 1}. $layoutName\n")
         }
+    }
 
-        api.addBriefingItem(layoutsDescription.trim())*/
+    api.addBriefingItem(layoutsDescription.trim())*/
 
 
         api.addBriefingItem("Picked Layout: ${pickedLayout.optString("name", "Missing")}")
@@ -239,7 +240,15 @@ class MissionDefinition : MissionDefinitionPlugin {
         api.context.fightToTheLast = fightToTheLast
     }
 
-    private fun generateAPIFleet(api: MissionDefinitionAPI, fleet: CampaignFleetAPI, side: FleetSide, aggression: Int = 2, useAdmiralAI: Boolean, autoSortShips: Boolean, automatedPenalty: Boolean) {
+    private fun generateAPIFleet(
+        api: MissionDefinitionAPI,
+        fleet: CampaignFleetAPI,
+        side: FleetSide,
+        aggression: Int = 2,
+        useAdmiralAI: Boolean,
+        autoSortShips: Boolean,
+        automatedPenalty: Boolean
+    ) {
         // From BattleCreationPluginImpl.java
 
         val baseCommandPoints = Global.getSettings().getFloat("startingCommandPoints").toInt()
@@ -278,14 +287,14 @@ class MissionDefinition : MissionDefinitionPlugin {
 
             totalDP += member.deploymentPointsCost
 
-            if(!hasDefaultOfficer && member.captain.isDefault && !member.captain.isAICore)
+            if (!hasDefaultOfficer && member.captain.isDefault && !member.captain.isAICore)
                 hasDefaultOfficer = true
         }
 
-        if(hasDefaultOfficer) {
+        if (hasDefaultOfficer) {
             val doctrine: String
 
-            if(aggression == 1) {
+            if (aggression == 1) {
                 doctrine = "CAUT"
             } else if (aggression == 2) {
                 doctrine = "STDY"
