@@ -8,23 +8,27 @@ import com.fs.starfarer.api.fleet.FleetGoal
 import com.fs.starfarer.api.fleet.FleetMemberAPI
 import com.fs.starfarer.api.fleet.FleetMemberType
 import com.fs.starfarer.api.impl.campaign.ids.Factions
-import com.fs.starfarer.api.impl.campaign.ids.FleetTypes
 import com.fs.starfarer.api.impl.hullmods.Automated
 import com.fs.starfarer.api.mission.FleetSide
 import com.fs.starfarer.api.mission.MissionDefinitionAPI
 import com.fs.starfarer.api.mission.MissionDefinitionPlugin
+import com.fs.starfarer.api.ui.Alignment
+import com.fs.starfarer.api.ui.UIPanelAPI
 import com.fs.starfarer.api.util.Misc
 import fleetBuilder.persistence.FleetSerialization
 import fleetBuilder.persistence.PersonSerialization
+import fleetBuilder.ui.PopUpUI.PopUpUIDialog
 import fleetBuilder.util.ClipboardUtil.getClipboardJson
 import fleetBuilder.util.DisplayMessage
 import fleetBuilder.util.FBMisc
+import fleetBuilder.util.ReflectionMisc
 import fleetBuilder.variants.VariantLib
 import fleetBuilderCB.customDir
 import fleetBuilderCB.defaultFleetFile
 import org.json.JSONObject
 import org.lazywizard.lazylib.ext.json.iterator
-import org.lwjgl.input.Keyboard
+import starficz.ReflectionUtils.getMethodsMatching
+import starficz.ReflectionUtils.invoke
 import java.util.*
 
 
@@ -42,6 +46,7 @@ class MissionDefinition : MissionDefinitionPlugin {
         private var enemyFleetJson: JSONObject = JSONObject()
         private var init = false
         private var forceDeployAll = true
+        private var applyOfficerDetails = true
     }
 
     private fun init() {
@@ -52,6 +57,7 @@ class MissionDefinition : MissionDefinitionPlugin {
         fightToTheLast = true
         defaultCR = true
         forceDeployAll = true
+        applyOfficerDetails = true
         //playerFleetJson = JSONObject()
         //enemyFleetJson = JSONObject()
 
@@ -74,9 +80,7 @@ class MissionDefinition : MissionDefinitionPlugin {
             }
         }
 
-        pickedLayout = JSONObject()
-        val index = layoutConfigChoices.indexOfFirst { it.optString("name") == "default_no_objective" }
-        pickedLayout = layoutConfigChoices[index]
+        pickedLayout = layoutConfigChoices.first()
 
 
         init = true
@@ -94,7 +98,8 @@ class MissionDefinition : MissionDefinitionPlugin {
             //val clone = member.variant.clone()
             //clone.hullVariantId += "_clone"
             //member.setVariant(clone, false, false)
-            member.variant.addPermaMod("SCVE_officerdetails_X")
+            if(applyOfficerDetails)
+                member.variant.addPermaMod("SCVE_officerdetails_X")
         }
 
         return fleet
@@ -108,61 +113,142 @@ class MissionDefinition : MissionDefinitionPlugin {
             return
         }
 
-        val shiftEnabled = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT)
-        val ctrlEnabled = Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL)
-        if (shiftEnabled && ctrlEnabled) init()
 
-        val qDown = Keyboard.isKeyDown(Keyboard.KEY_Q)
-        val wDown = Keyboard.isKeyDown(Keyboard.KEY_W)
+        if(FBCBMissionListener.missionUI == null) {
+            val coreUI = ReflectionMisc.getCoreUI() ?: return
 
-        if (Keyboard.isKeyDown(Keyboard.KEY_T)) speedUp = !speedUp
-        if (Keyboard.isKeyDown(Keyboard.KEY_F)) flipSide = !flipSide
-        if (Keyboard.isKeyDown(Keyboard.KEY_A)) aiRetreatAllowed = !aiRetreatAllowed
-        if (Keyboard.isKeyDown(Keyboard.KEY_D)) forceDeployAll = !forceDeployAll
+            val missionThing = (coreUI.invoke("getChildrenCopy") as List<*>).find { it?.getMethodsMatching(name = "getMissionList")?.isNotEmpty() == true }
+            val missionList = missionThing?.invoke("getMissionList")
+            val missionDetail = missionThing?.invoke("getMissionDetail") as? UIPanelAPI ?: return
 
-        if (Keyboard.isKeyDown(Keyboard.KEY_Z)) {
-            val index = layoutConfigChoices.indexOfFirst { it.optString("name") == pickedLayout.optString("name") }
+            val missionOrderOfBattle = (missionDetail.invoke("getChildrenCopy") as List<*>).find { it?.getMethodsMatching(name = "getRefit")?.isNotEmpty() == true } as? UIPanelAPI
+                ?: return
+            val yourFlagship = (missionDetail.invoke("getChildrenCopy") as List<*>).find { it?.getMethodsMatching(name = "setVariant")?.isNotEmpty() == true } as? UIPanelAPI
+                ?: return
+            yourFlagship.invoke("setOpacity", 0f)
 
-            val nextLayoutObject = if (index != -1) {
-                val nextIndex = (index + 1) % layoutConfigChoices.size
-                layoutConfigChoices[nextIndex]
-            } else {
-                layoutConfigChoices.first()
+            /*val detailChildren = missionDetail.invoke("getChildrenCopy") as List<*>
+            detailChildren.getOrNull(0)?.invoke("setOpacity", 0f)//Title
+            detailChildren.getOrNull(1)?.invoke("setOpacity", 0f)//Tactical briefing
+            detailChildren.getOrNull(2)?.invoke("setOpacity", 0f)//Description
+            detailChildren.getOrNull(3)?.invoke("setOpacity", 0f)//Your flagship
+            detailChildren.getOrNull(4)?.invoke("setOpacity", 0f)//Order of battle + each fleet & refit / reset buttons*/
+
+            val dialog = PopUpUIDialog("Custom Fleet Battle Settings", addConfirmButton = true)
+            dialog.confirmButtonName = "Apply"
+            dialog.confirmAndCancelAlignment = Alignment.LMID
+            dialog.doesConfirmForceDismiss = false
+
+            dialog.addButton("Reset Settings", dismissOnClick = false) {
+
+                missionDetail.removeComponent(dialog.panelToInfluence)
+                FBCBMissionListener.missionUI = null
+                init = false
+                missionList?.invoke("selectMission", "moreloadouts_fleet_tester")
             }
 
-            pickedLayout = nextLayoutObject
-        }
+            dialog.addPadding(dialog.buttonHeight)
 
-        // Try to fetch clipboard fleet data if relevant keys are pressed
-        val clipboardJson = if (qDown || wDown) getClipboardJson().also {
-            if (it == null) {
-                DisplayMessage.showError("No valid fleet data found in clipboard")
+            dialog.addButton("Click to assign clipboard to player fleet", dismissOnClick = false) {
+                val clipboardJson = getClipboardJson()
+                if (clipboardJson == null) {
+                    DisplayMessage.showError("No valid fleet data found in clipboard")
+                } else {
+                    playerFleetJson = clipboardJson
+                }
+
+                dialog.confirmButton?.opacity = 1f
             }
-        } else null
+            dialog.addButton("Click to assign clipboard to enemy fleet", dismissOnClick = false) {
+                val clipboardJson = getClipboardJson()
+                if (clipboardJson == null) {
+                    DisplayMessage.showError("No valid fleet data found in clipboard")
+                } else {
+                    enemyFleetJson = clipboardJson
+                }
 
-        // Assign clipboard data to respective fleet JSONs, only if not null
-        clipboardJson?.let {
-            if (qDown) playerFleetJson = it
-            if (wDown) enemyFleetJson = it
+                dialog.confirmButton?.opacity = 1f
+            }
+
+            dialog.addPadding(dialog.buttonHeight / 2)
+
+            dialog.addParagraph("During the battle, the following keys can be pressed.\n" +
+                    "\n" +
+                    "Alt: Disable Free-Cam and return to vanilla camera\n" +
+                    "C: Enable/switch Free-Cam modes\n" +
+                    "Left-Click: Zoom In (Free-Cam)\n" +
+                    "Right-Click: Zoom Out (Free-Cam)\n" +
+                    "Right-Ctrl: Hide/show ship UI\n" +
+                    "\n" +
+                    "In Free-Cam mode, you no longer need to jump from ship-to-ship to watch the battle; the camera is completely free.\n" +
+                    "- Drag Free-Cam smoothly pans the camera in the direction of your mouse.\n" +
+                    "- Absolute Free-Cam directly ties the camera to your mouse movements.")
+
+            dialog.addPadding(dialog.buttonHeight * 2)
+
+            dialog.addParagraph("Layout Config:")
+            dialog.addRadioGroup(layoutConfigChoices.map { it.optString("name") }, pickedLayout.optString("name")) { selected ->
+
+                pickedLayout = layoutConfigChoices.first { it.optString("name") == selected }
+            }
+
+            dialog.addPadding(dialog.buttonHeight)
+
+            dialog.addToggle("Speed Up", speedUp) {
+                dialog.confirmButton?.opacity = 1f
+                speedUp = !speedUp
+            }
+
+            dialog.addToggle("Flip Side", flipSide) {
+                dialog.confirmButton?.opacity = 1f
+                flipSide = !flipSide
+            }
+
+            dialog.addToggle("Allow AI Retreat", aiRetreatAllowed) {
+                dialog.confirmButton?.opacity = 1f
+                aiRetreatAllowed = !aiRetreatAllowed
+            }
+
+            dialog.addToggle("Force Deploy All", forceDeployAll) {
+                dialog.confirmButton?.opacity = 1f
+                forceDeployAll = !forceDeployAll
+            }
+
+            dialog.addToggle("Apply Officer Details HullMod", applyOfficerDetails) {
+                dialog.confirmButton?.opacity = 1f
+                applyOfficerDetails = !applyOfficerDetails
+            }
+
+            dialog.onConfirm { _ ->
+                //Reload this mission
+                missionList?.invoke("selectMission", "moreloadouts_fleet_tester")
+
+                dialog.confirmButton?.opacity = 0f
+            }
+
+            val panelAPI = Global.getSettings().createCustom(missionDetail.position.width, missionDetail.position.height, dialog)
+            dialog.init(
+                panelAPI,
+                0f,
+                missionDetail.position.height,
+                parent = missionDetail,
+                isDialog = false
+            )
+            dialog.confirmButton?.opacity = 0f
+
+            missionDetail.bringComponentToTop(missionOrderOfBattle)
+
+            FBCBMissionListener.missionUI = panelAPI
         }
+
 
         // Load fleets
-        var playerFleet = loadFleetFromJson(playerFleetJson, Factions.PLAYER)
-        var enemyFleet = loadFleetFromJson(enemyFleetJson, Factions.PLAYER)
+        val playerFleet = loadFleetFromJson(playerFleetJson, Factions.PLAYER)
+        val enemyFleet = loadFleetFromJson(enemyFleetJson, Factions.PLAYER)
 
         // Validate fleets
-        if (playerFleet.fleetSizeCount == 0) {
-            val fleet = Global.getFactory().createEmptyFleet(Factions.PLAYER, FleetTypes.TASK_FORCE, true)
-            fleet.fleetData.addFleetMember(Global.getSettings().createFleetMember(FleetMemberType.SHIP, VariantLib.createErrorVariant()))
-            playerFleet = fleet
-            DisplayMessage.showError("Failed to create player fleet")
-        }
-        if (enemyFleet.fleetSizeCount == 0) {
-            val fleet = Global.getFactory().createEmptyFleet(Factions.PLAYER, FleetTypes.TASK_FORCE, true)
-            fleet.fleetData.addFleetMember(Global.getSettings().createFleetMember(FleetMemberType.SHIP, VariantLib.createErrorVariant()))
-            enemyFleet = fleet
-            DisplayMessage.showError("Failed to create enemy fleet ")
-        }
+        validateFleet(playerFleet, FleetSide.PLAYER)
+        validateFleet(enemyFleet, FleetSide.ENEMY)
 
         // Choose fleet sides based on flipSide flag
         val (playerSide, enemySide) = if (!flipSide) FleetSide.PLAYER to FleetSide.ENEMY else FleetSide.ENEMY to FleetSide.PLAYER
@@ -186,36 +272,16 @@ class MissionDefinition : MissionDefinitionPlugin {
 
         api.addPlugin(AIBattlesMini_FreeCamPlugin())
 
-        var optionBrief = ""
         if (speedUp) {
             api.addPlugin(AIBattlesMini_Util.getSpeedUpPlugin())
-            optionBrief += "1-100x Speed-Up, "
-        }
-        if (flipSide) {
-            optionBrief += "Flipped Player and Enemy Sides, "
-        }
-        if (aiRetreatAllowed) {
-            optionBrief += "AI retreat allowed, "
-        }
-        if (!forceDeployAll) {
-            optionBrief += "Not force deploying entire fleet, "
-        }
-
-        /*
-    val layoutsDescription = buildString {
-        append("Available layouts:\n")
-        for ((index, obj) in layoutConfigChoices.withIndex()) {
-            val layoutName = obj.optString("layout", "Unnamed")
-            append("  ${index + 1}. $layoutName\n")
         }
     }
 
-    api.addBriefingItem(layoutsDescription.trim())*/
-
-
-        api.addBriefingItem("Picked Layout: ${pickedLayout.optString("name", "Missing")}")
-
-        if (optionBrief.isNotEmpty()) api.addBriefingItem("Changed: " + optionBrief.substring(0, optionBrief.length - 2))
+    private fun validateFleet(fleet: CampaignFleetAPI, fleetSide: FleetSide) {
+        if (fleet.fleetSizeCount == 0) {
+            fleet.fleetData.addFleetMember(Global.getSettings().createFleetMember(FleetMemberType.SHIP, VariantLib.createErrorVariant()))
+            DisplayMessage.showError("Failed to create fleet on side ${fleetSide.name}")
+        }
     }
 
 

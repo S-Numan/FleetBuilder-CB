@@ -20,6 +20,5 @@ class FleetBuilderCBPlugin : BaseModPlugin() {
 
             Global.getSettings().writeJSONToCommon(customDir + defaultFleetFile, defaultFleets, false)
         }
-
     }
 }
