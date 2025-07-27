@@ -151,7 +151,7 @@ class MissionDefinition : MissionDefinitionPlugin {
 
             dialog.addButton("Click to assign clipboard to player fleet", dismissOnClick = false) {
                 val clipboardJson = getClipboardJson()
-                if (clipboardJson == null) {
+                if (clipboardJson == null || !clipboardJson.has("members")) {
                     DisplayMessage.showError("No valid fleet data found in clipboard")
                 } else {
                     playerFleetJson = clipboardJson
@@ -161,7 +161,7 @@ class MissionDefinition : MissionDefinitionPlugin {
             }
             dialog.addButton("Click to assign clipboard to enemy fleet", dismissOnClick = false) {
                 val clipboardJson = getClipboardJson()
-                if (clipboardJson == null) {
+                if (clipboardJson == null || !clipboardJson.has("members")) {
                     DisplayMessage.showError("No valid fleet data found in clipboard")
                 } else {
                     enemyFleetJson = clipboardJson
