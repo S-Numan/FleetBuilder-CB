@@ -1,6 +1,6 @@
 {
 	"plugins":{
-		"FBCBMissionListener":"data.missions.moreloadouts_fleet_tester.FBCBMissionListener",
+		"FBCBMissionListener":"data.missions.fb_custom_battle.FBCBMissionListener",
 	},
 
 }

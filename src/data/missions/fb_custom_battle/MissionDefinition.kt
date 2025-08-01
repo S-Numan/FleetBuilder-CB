@@ -1,4 +1,4 @@
-package data.missions.moreloadouts_fleet_tester
+package data.missions.fb_custom_battle
 
 import aiMiniBattles.tranquility.aibattlesmini.AIBattlesMini_FreeCamPlugin
 import aiMiniBattles.tranquility.aibattlesmini.AIBattlesMini_Util
@@ -15,8 +15,8 @@ import com.fs.starfarer.api.mission.MissionDefinitionPlugin
 import com.fs.starfarer.api.ui.Alignment
 import com.fs.starfarer.api.ui.UIPanelAPI
 import com.fs.starfarer.api.util.Misc
-import fleetBuilder.persistence.FleetSerialization
-import fleetBuilder.persistence.PersonSerialization
+import fleetBuilder.persistence.fleet.FleetSerialization
+import fleetBuilder.persistence.person.PersonSerialization
 import fleetBuilder.ui.PopUpUI.PopUpUIDialog
 import fleetBuilder.util.ClipboardUtil.getClipboardJson
 import fleetBuilder.util.DisplayMessage
@@ -25,6 +25,7 @@ import fleetBuilder.util.ReflectionMisc
 import fleetBuilder.variants.VariantLib
 import fleetBuilderCB.customDir
 import fleetBuilderCB.defaultFleetFile
+import fleetBuilderCB.missionID
 import org.json.JSONObject
 import org.lazywizard.lazylib.ext.json.iterator
 import starficz.ReflectionUtils.getMethodsMatching
@@ -134,17 +135,17 @@ class MissionDefinition : MissionDefinitionPlugin {
             detailChildren.getOrNull(3)?.invoke("setOpacity", 0f)//Your flagship
             detailChildren.getOrNull(4)?.invoke("setOpacity", 0f)//Order of battle + each fleet & refit / reset buttons*/
 
-            val dialog = PopUpUIDialog("Custom Fleet Battle Settings", addConfirmButton = true)
+            val dialog = PopUpUIDialog("Custom Battle Settings", addConfirmButton = true)
             dialog.confirmButtonName = "Apply"
             dialog.confirmAndCancelAlignment = Alignment.LMID
             dialog.doesConfirmForceDismiss = false
 
             dialog.addButton("Reset Settings", dismissOnClick = false) {
 
-                missionDetail.removeComponent(dialog.panelToInfluence)
+                missionDetail.removeComponent(dialog.panel)
                 FBCBMissionListener.missionUI = null
                 init = false
-                missionList?.invoke("selectMission", "moreloadouts_fleet_tester")
+                missionList?.invoke("selectMission", missionID)
             }
 
             dialog.addPadding(dialog.buttonHeight)
@@ -157,7 +158,9 @@ class MissionDefinition : MissionDefinitionPlugin {
                     playerFleetJson = clipboardJson
                 }
 
-                dialog.confirmButton?.opacity = 1f
+
+                missionList?.invoke("selectMission", missionID)
+                dialog.confirmButton?.opacity = 0f
             }
             dialog.addButton("Click to assign clipboard to enemy fleet", dismissOnClick = false) {
                 val clipboardJson = getClipboardJson()
@@ -167,7 +170,8 @@ class MissionDefinition : MissionDefinitionPlugin {
                     enemyFleetJson = clipboardJson
                 }
 
-                dialog.confirmButton?.opacity = 1f
+                missionList?.invoke("selectMission", missionID)
+                dialog.confirmButton?.opacity = 0f
             }
 
             dialog.addPadding(dialog.buttonHeight / 2)
@@ -190,6 +194,8 @@ class MissionDefinition : MissionDefinitionPlugin {
             dialog.addRadioGroup(layoutConfigChoices.map { it.optString("name") }, pickedLayout.optString("name")) { selected ->
 
                 pickedLayout = layoutConfigChoices.first { it.optString("name") == selected }
+
+                dialog.confirmButton?.opacity = 1f
             }
 
             dialog.addPadding(dialog.buttonHeight)
@@ -221,7 +227,7 @@ class MissionDefinition : MissionDefinitionPlugin {
 
             dialog.onConfirm { _ ->
                 //Reload this mission
-                missionList?.invoke("selectMission", "moreloadouts_fleet_tester")
+                missionList?.invoke("selectMission", missionID)
 
                 dialog.confirmButton?.opacity = 0f
             }

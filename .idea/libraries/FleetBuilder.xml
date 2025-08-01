@@ -5,7 +5,7 @@
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="file://$PROJECT_DIR$/../FleetBuilder/src/fleetBuilder" />
+      <root url="file://$PROJECT_DIR$/../FleetBuilder/src" />
     </SOURCES>
   </library>
 </component>

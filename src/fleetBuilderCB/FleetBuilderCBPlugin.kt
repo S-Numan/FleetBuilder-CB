@@ -7,6 +7,7 @@ import org.json.JSONObject
 
 const val customDir = (PRIMARYDIR + "CustomBattle/")
 const val defaultFleetFile = "defaultFleets"
+const val missionID = "fb_custom_battle"
 
 class FleetBuilderCBPlugin : BaseModPlugin() {
 
