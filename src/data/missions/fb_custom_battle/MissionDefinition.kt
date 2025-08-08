@@ -17,7 +17,7 @@ import com.fs.starfarer.api.ui.UIPanelAPI
 import com.fs.starfarer.api.util.Misc
 import fleetBuilder.persistence.fleet.FleetSerialization
 import fleetBuilder.persistence.person.PersonSerialization
-import fleetBuilder.ui.PopUpUI.PopUpUIDialog
+import fleetBuilder.ui.popUpUI.PopUpUIDialog
 import fleetBuilder.util.ClipboardUtil.getClipboardJson
 import fleetBuilder.util.DisplayMessage
 import fleetBuilder.util.FBMisc
