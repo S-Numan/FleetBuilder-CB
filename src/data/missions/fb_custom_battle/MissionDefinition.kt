@@ -88,12 +88,9 @@ class MissionDefinition : MissionDefinitionPlugin {
     }
 
     private fun loadFleetFromJson(json: JSONObject, factionId: String): CampaignFleetAPI {
-        val fleet = FBMisc.createFleetFromJson(
-            json,
-            faction = factionId,
-            settings = FleetSerialization.FleetSettings().apply {
-                //   includeCommanderSetFlagship = false
-            }
+        val data = FleetSerialization.extractFleetDataFromJson(json)
+        val fleet = FleetSerialization.createCampaignFleetFromData(
+            data.copy(factionID = factionId), true
         )
         for (member in fleet.fleetData.membersListCopy) {
             //val clone = member.variant.clone()
