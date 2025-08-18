@@ -16,8 +16,8 @@ class FleetBuilderCBPlugin : BaseModPlugin() {
 
         if(!Global.getSettings().fileExistsInCommon(customDir + defaultFleetFile)) {
             val defaultFleets = JSONObject()
-            defaultFleets.put("firstFleet", "data/fleets/Fleets_Core/TritachyonPatrol.json")
-            defaultFleets.put("secondFleet", "data/fleets/Fleets_Core/HegemonyFastPicket.json")
+            defaultFleets.put("firstFleet", "data/fleets/Core Fleets/Tritachyon Patrol.json")
+            defaultFleets.put("secondFleet", "data/fleets/Core Fleets/Hegemony Fast Picket.json")
 
             Global.getSettings().writeJSONToCommon(customDir + defaultFleetFile, defaultFleets, false)
         }

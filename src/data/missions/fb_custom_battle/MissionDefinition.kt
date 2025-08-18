@@ -13,14 +13,15 @@ import com.fs.starfarer.api.mission.FleetSide
 import com.fs.starfarer.api.mission.MissionDefinitionAPI
 import com.fs.starfarer.api.mission.MissionDefinitionPlugin
 import com.fs.starfarer.api.ui.Alignment
+import com.fs.starfarer.api.ui.TooltipMakerAPI
 import com.fs.starfarer.api.ui.UIPanelAPI
 import com.fs.starfarer.api.util.Misc
-import fleetBuilder.persistence.fleet.FleetSerialization
-import fleetBuilder.persistence.person.PersonSerialization
+import fleetBuilder.persistence.fleet.DataFleet.createCampaignFleetFromData
+import fleetBuilder.persistence.fleet.JSONFleet.extractFleetDataFromJson
+import fleetBuilder.persistence.person.DataPerson.copyPerson
 import fleetBuilder.ui.popUpUI.PopUpUIDialog
 import fleetBuilder.util.ClipboardUtil.getClipboardJson
 import fleetBuilder.util.DisplayMessage
-import fleetBuilder.util.FBMisc
 import fleetBuilder.util.ReflectionMisc
 import fleetBuilder.variants.VariantLib
 import fleetBuilderCB.customDir
@@ -30,6 +31,9 @@ import org.json.JSONObject
 import org.lazywizard.lazylib.ext.json.iterator
 import starficz.ReflectionUtils.getMethodsMatching
 import starficz.ReflectionUtils.invoke
+import starficz.addImage
+import starficz.addTooltip
+import java.awt.Color
 import java.util.*
 
 
@@ -88,8 +92,8 @@ class MissionDefinition : MissionDefinitionPlugin {
     }
 
     private fun loadFleetFromJson(json: JSONObject, factionId: String): CampaignFleetAPI {
-        val data = FleetSerialization.extractFleetDataFromJson(json)
-        val fleet = FleetSerialization.createCampaignFleetFromData(
+        val data = extractFleetDataFromJson(json)
+        val fleet = createCampaignFleetFromData(
             data.copy(factionID = factionId), true
         )
         for (member in fleet.fleetData.membersListCopy) {
@@ -111,7 +115,16 @@ class MissionDefinition : MissionDefinitionPlugin {
             return
         }
 
+        // Load fleets
+        val playerFleet = loadFleetFromJson(playerFleetJson, Factions.PLAYER)
+        val enemyFleet = loadFleetFromJson(enemyFleetJson, Factions.PLAYER)
 
+        // Validate fleets
+        validateFleet(playerFleet, FleetSide.PLAYER)
+        validateFleet(enemyFleet, FleetSide.ENEMY)
+
+
+        // This UI is a terrible hack
         if(FBCBMissionListener.missionUI == null) {
             val coreUI = ReflectionMisc.getCoreUI() ?: return
 
@@ -195,7 +208,12 @@ class MissionDefinition : MissionDefinitionPlugin {
                 dialog.confirmButton?.opacity = 1f
             }
 
-            dialog.addPadding(dialog.buttonHeight)
+            dialog.addPadding(dialog.buttonHeight + 4f)
+
+            dialog.addToggle("Apply Officer Details HullMod", applyOfficerDetails) {
+                dialog.confirmButton?.opacity = 1f
+                applyOfficerDetails = !applyOfficerDetails
+            }
 
             dialog.addToggle("Speed Up", speedUp) {
                 dialog.confirmButton?.opacity = 1f
@@ -217,14 +235,14 @@ class MissionDefinition : MissionDefinitionPlugin {
                 forceDeployAll = !forceDeployAll
             }
 
-            dialog.addToggle("Apply Officer Details HullMod", applyOfficerDetails) {
-                dialog.confirmButton?.opacity = 1f
-                applyOfficerDetails = !applyOfficerDetails
-            }
-
             dialog.onConfirm { _ ->
+                // Remake UI
+                missionDetail.removeComponent(dialog.panel)
+                FBCBMissionListener.missionUI = null
+
                 //Reload this mission
                 missionList?.invoke("selectMission", missionID)
+
 
                 dialog.confirmButton?.opacity = 0f
             }
@@ -239,19 +257,54 @@ class MissionDefinition : MissionDefinitionPlugin {
             )
             dialog.confirmButton?.opacity = 0f
 
+            val pad = 10f
+
+            fun addCommanderWithTooltip(
+                fleet: CampaignFleetAPI,
+                offsetX: Float,
+                offsetY: Float
+            ) {
+                val commanderImage = panelAPI.addImage(fleet.commander.portraitSprite, 64f, 64f)
+
+                commanderImage.position.setXAlignOffset(
+                    -commanderImage.position.x + missionOrderOfBattle.position.x - 32f - 12f + offsetX
+                )
+                commanderImage.position.setYAlignOffset(
+                    -commanderImage.position.y + missionOrderOfBattle.position.y + 32f + 16f + offsetY
+                )
+
+                commanderImage.uiImage.addTooltip(TooltipMakerAPI.TooltipLocation.LEFT, 280f) { tooltip ->
+                    val skills = fleet.commander.stats.skillsCopy
+                        .filter { it.skill.isAdmiralSkill && it.level > 0f }
+
+                    tooltip.addTitle(fleet.commander.nameString)
+
+                    tooltip.addSectionHeading("Commander Skills:", Alignment.MID, pad)
+
+                    for (skill in skills) {
+                        val skillImageWithText = tooltip.beginImageWithText(skill.skill.spriteName, 40f)
+                        skillImageWithText.addPara(skill.skill.name, 0f)
+                        tooltip.addImageWithText(pad)
+                    }
+                }
+            }
+
+                addCommanderWithTooltip(
+                    playerFleet,
+                    offsetX = 0f,
+                    offsetY = if(!flipSide) 128f else -8f
+                )
+                addCommanderWithTooltip(
+                    enemyFleet,
+                    offsetX = 0f,
+                    offsetY = if(flipSide) 128f else -8f
+                )
+
+
             missionDetail.bringComponentToTop(missionOrderOfBattle)
 
             FBCBMissionListener.missionUI = panelAPI
         }
-
-
-        // Load fleets
-        val playerFleet = loadFleetFromJson(playerFleetJson, Factions.PLAYER)
-        val enemyFleet = loadFleetFromJson(enemyFleetJson, Factions.PLAYER)
-
-        // Validate fleets
-        validateFleet(playerFleet, FleetSide.PLAYER)
-        validateFleet(enemyFleet, FleetSide.ENEMY)
 
         // Choose fleet sides based on flipSide flag
         val (playerSide, enemySide) = if (!flipSide) FleetSide.PLAYER to FleetSide.ENEMY else FleetSide.ENEMY to FleetSide.PLAYER
@@ -339,8 +392,7 @@ class MissionDefinition : MissionDefinitionPlugin {
         //The commander must not be piloting a ship, otherwise the game crashes on entering the mission.
 
         //Make copy of commander, and assign them to be the commander
-        val tempCommander = PersonSerialization.savePersonToJson(fleet.commander)
-        fleet.commander = PersonSerialization.getPersonFromJson(tempCommander)
+        fleet.commander = copyPerson(fleet.commander)
 
         var hasDefaultOfficer = false
 
