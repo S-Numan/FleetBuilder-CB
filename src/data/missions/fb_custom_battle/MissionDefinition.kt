@@ -150,12 +150,19 @@ class MissionDefinition : MissionDefinitionPlugin {
             dialog.confirmAndCancelAlignment = Alignment.LMID
             dialog.doesConfirmForceDismiss = false
 
-            dialog.addButton("Reset Settings", dismissOnClick = false) {
-
+            fun resetMission() {
+                //Reload UI
                 missionDetail.removeComponent(dialog.panel)
                 FBCBMissionListener.missionUI = null
-                init = false
+
+                //Reload this mission
                 missionList?.invoke("selectMission", missionID)
+            }
+
+            dialog.addButton("Reset Settings", dismissOnClick = false) {
+                init = false
+
+                resetMission()
             }
 
             dialog.addPadding(dialog.buttonHeight)
@@ -169,7 +176,7 @@ class MissionDefinition : MissionDefinitionPlugin {
                 }
 
 
-                missionList?.invoke("selectMission", missionID)
+                resetMission()
                 dialog.confirmButton?.opacity = 0f
             }
             dialog.addButton("Click to assign clipboard to enemy fleet", dismissOnClick = false) {
@@ -180,7 +187,7 @@ class MissionDefinition : MissionDefinitionPlugin {
                     enemyFleetJson = clipboardJson
                 }
 
-                missionList?.invoke("selectMission", missionID)
+                resetMission()
                 dialog.confirmButton?.opacity = 0f
             }
 
@@ -236,13 +243,7 @@ class MissionDefinition : MissionDefinitionPlugin {
             }
 
             dialog.onConfirm { _ ->
-                // Remake UI
-                missionDetail.removeComponent(dialog.panel)
-                FBCBMissionListener.missionUI = null
-
-                //Reload this mission
-                missionList?.invoke("selectMission", missionID)
-
+                resetMission()
 
                 dialog.confirmButton?.opacity = 0f
             }
