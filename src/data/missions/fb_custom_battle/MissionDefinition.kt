@@ -19,10 +19,10 @@ import com.fs.starfarer.api.util.Misc
 import fleetBuilder.persistence.fleet.DataFleet.createCampaignFleetFromData
 import fleetBuilder.persistence.fleet.JSONFleet.extractFleetDataFromJson
 import fleetBuilder.persistence.person.DataPerson.copyPerson
-import fleetBuilder.ui.popUpUI.PopUpUIDialog
-import fleetBuilder.util.ClipboardUtil.getClipboardJson
+import fleetBuilder.ui.popUpUI.old.PopUpUIDialog
 import fleetBuilder.util.DisplayMessage
 import fleetBuilder.util.ReflectionMisc
+import fleetBuilder.util.lib.ClipboardUtil.getClipboardJson
 import fleetBuilder.variants.VariantLib
 import fleetBuilderCB.customDir
 import fleetBuilderCB.defaultFleetFile
