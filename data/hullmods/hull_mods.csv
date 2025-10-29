@@ -3,4 +3,4 @@ name,id,tier,rarity,tech/manufacturer,tags,uiTags,base value,unlocked,hidden,hid
 ,,,,,,,,,,,,,,,,,,,
 ,,,,,,,,,,,,,,,,,,,
 ,,,,,,,,,,,,,,,,,,,
-Officer Details,SCVE_officerdetails_X,,,,"no_drop, no_sell, no_bp_drop, no_drop_salvage",{Mission},0,,TRUE,,0,0,0,0,SCVE.hullmods.SCVE_OfficerDetails,Describes officer details.,,,graphics/icons/intel/important.png
+Officer Details,SCVE_officerdetails_X,,,,"no_drop, no_sell, no_bp_drop, no_drop_salvage, hide_in_codex",{Mission},0,,TRUE,,0,0,0,0,SCVE.hullmods.SCVE_OfficerDetails,Describes officer details.,,,graphics/icons/intel/important.png

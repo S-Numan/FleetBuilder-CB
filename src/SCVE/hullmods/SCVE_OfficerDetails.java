@@ -70,6 +70,9 @@ public class SCVE_OfficerDetails extends BaseHullMod {
 
     @Override
     public void addPostDescriptionSection(TooltipMakerAPI tooltip, ShipAPI.HullSize hullSize, ShipAPI ship, float width, boolean isForModSpec) {
+        if(ship == null)
+            return;
+
         PersonAPI person = ship.getCaptain();
         final float PAD = 10f;
 
