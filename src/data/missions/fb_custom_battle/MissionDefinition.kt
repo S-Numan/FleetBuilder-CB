@@ -19,9 +19,10 @@ import com.fs.starfarer.api.util.Misc
 import fleetBuilder.persistence.fleet.DataFleet.createCampaignFleetFromData
 import fleetBuilder.persistence.fleet.JSONFleet.extractFleetDataFromJson
 import fleetBuilder.persistence.person.DataPerson.copyPerson
-import fleetBuilder.ui.popUpUI.old.PopUpUIDialog
+import fleetBuilder.ui.popUpUI.BasePopUpUI
 import fleetBuilder.util.DisplayMessage
 import fleetBuilder.util.ReflectionMisc
+import fleetBuilder.util.addToggle
 import fleetBuilder.util.lib.ClipboardUtil.getClipboardJson
 import fleetBuilder.variants.VariantLib
 import fleetBuilderCB.customDir
@@ -33,7 +34,7 @@ import starficz.ReflectionUtils.getMethodsMatching
 import starficz.ReflectionUtils.invoke
 import starficz.addImage
 import starficz.addTooltip
-import java.awt.Color
+import starficz.onClick
 import java.util.*
 
 
@@ -145,150 +146,157 @@ class MissionDefinition : MissionDefinitionPlugin {
             detailChildren.getOrNull(3)?.invoke("setOpacity", 0f)//Your flagship
             detailChildren.getOrNull(4)?.invoke("setOpacity", 0f)//Order of battle + each fleet & refit / reset buttons*/
 
-            val dialog = PopUpUIDialog("Custom Battle Settings", addConfirmButton = true)
-            dialog.confirmButtonName = "Apply"
-            dialog.confirmAndCancelAlignment = Alignment.LMID
-            dialog.doesConfirmForceDismiss = false
 
-            fun resetMission() {
-                //Reload UI
-                missionDetail.removeComponent(dialog.panel)
-                FBCBMissionListener.missionUI = null
 
-                //Reload this mission
-                missionList?.invoke("selectMission", missionID)
-            }
+            val buttonHeight = 24f
 
-            dialog.addButton("Reset Settings", dismissOnClick = false) {
-                init = false
+            val dialog = BasePopUpUI(headerTitle = "Custom Battle Settings")
+            dialog.isDialog = false
+            dialog.onCreateUI(missionDetail.position.width, missionDetail.position.height, parent = missionDetail, x = 0f, y = missionDetail.position.height) { ui ->
+                fun resetMission() {
+                    //Reload UI
+                    missionDetail.removeComponent(dialog.panel)
+                    FBCBMissionListener.missionUI = null
 
-                resetMission()
-            }
-
-            dialog.addPadding(dialog.buttonHeight)
-
-            dialog.addButton("Click to assign clipboard to player fleet", dismissOnClick = false) {
-                val clipboardJson = getClipboardJson()
-                if (clipboardJson == null || !clipboardJson.has("members")) {
-                    DisplayMessage.showError("No valid fleet data found in clipboard")
-                } else {
-                    playerFleetJson = clipboardJson
+                    //Reload this mission
+                    missionList?.invoke("selectMission", missionID)
                 }
 
+                ui.addButton("Reset Settings", null, dialog.bufferedWidth, buttonHeight, 0f).onClick {
+                    init = false
 
-                resetMission()
-                dialog.confirmButton?.opacity = 0f
-            }
-            dialog.addButton("Click to assign clipboard to enemy fleet", dismissOnClick = false) {
-                val clipboardJson = getClipboardJson()
-                if (clipboardJson == null || !clipboardJson.has("members")) {
-                    DisplayMessage.showError("No valid fleet data found in clipboard")
-                } else {
-                    enemyFleetJson = clipboardJson
+                    resetMission()
                 }
 
-                resetMission()
-                dialog.confirmButton?.opacity = 0f
-            }
+                ui.addSpacer(buttonHeight)
 
-            dialog.addPadding(dialog.buttonHeight / 2)
+                ui.addButton("Click to assign clipboard to player fleet", null, dialog.bufferedWidth, buttonHeight, 0f).onClick {
+                    val clipboardJson = getClipboardJson()
+                    if (clipboardJson == null || !clipboardJson.has("members")) {
+                        DisplayMessage.showError("No valid fleet data found in clipboard")
+                    } else {
+                        playerFleetJson = clipboardJson
+                    }
 
-            dialog.addParagraph("During the battle, the following keys can be pressed.\n" +
-                    "\n" +
-                    "Alt: Disable Free-Cam and return to vanilla camera\n" +
-                    "C: Enable/switch Free-Cam modes\n" +
-                    "Left-Click: Zoom In (Free-Cam)\n" +
-                    "Right-Click: Zoom Out (Free-Cam)\n" +
-                    "Right-Ctrl: Hide/show ship UI\n" +
-                    "\n" +
-                    "In Free-Cam mode, you no longer need to jump from ship-to-ship to watch the battle; the camera is completely free.\n" +
-                    "- Drag Free-Cam smoothly pans the camera in the direction of your mouse.\n" +
-                    "- Absolute Free-Cam directly ties the camera to your mouse movements.")
+                    resetMission()
+                    dialog.confirmButton?.opacity = 0f
+                }
+                ui.addButton("Click to assign clipboard to enemy fleet", null, dialog.bufferedWidth, buttonHeight, 0f).onClick {
+                    val clipboardJson = getClipboardJson()
+                    if (clipboardJson == null || !clipboardJson.has("members")) {
+                        DisplayMessage.showError("No valid fleet data found in clipboard")
+                    } else {
+                        enemyFleetJson = clipboardJson
+                    }
 
-            dialog.addPadding(dialog.buttonHeight * 2)
+                    resetMission()
+                    dialog.confirmButton?.opacity = 0f
+                }
 
-            dialog.addParagraph("Layout Config:")
-            dialog.addRadioGroup(layoutConfigChoices.map { it.optString("name") }, pickedLayout.optString("name")) { selected ->
+                ui.addSpacer(buttonHeight / 2)
 
-                pickedLayout = layoutConfigChoices.first { it.optString("name") == selected }
 
-                dialog.confirmButton?.opacity = 1f
-            }
 
-            dialog.addPadding(dialog.buttonHeight + 4f)
+                ui.addPara("During the battle, the following keys can be pressed.\n" +
+                        "\n" +
+                        "Alt: Disable Free-Cam and return to vanilla camera\n" +
+                        "C: Enable/switch Free-Cam modes\n" +
+                        "Left-Click: Zoom In (Free-Cam)\n" +
+                        "Right-Click: Zoom Out (Free-Cam)\n" +
+                        "Right-Ctrl: Hide/show ship UI\n" +
+                        "\n" +
+                        "In Free-Cam mode, you no longer need to jump from ship-to-ship to watch the battle; the camera is completely free.\n" +
+                        "- Drag Free-Cam smoothly pans the camera in the direction of your mouse.\n" +
+                        "- Absolute Free-Cam directly ties the camera to your mouse movements.", 0f)
 
-            dialog.addToggle("Apply Officer Details HullMod", applyOfficerDetails) {
-                dialog.confirmButton?.opacity = 1f
-                applyOfficerDetails = !applyOfficerDetails
-            }
+                ui.addSpacer(buttonHeight * 2)
 
-            dialog.addToggle("Speed Up", speedUp) {
-                dialog.confirmButton?.opacity = 1f
-                speedUp = !speedUp
-            }
+                ui.addPara("Layout Config:", 0f)
+                var currentLayout = pickedLayout.optString("name")
+                val layouts = layoutConfigChoices.map { it.optString("name") }
+                val toggles = layouts.indices.map { index ->
+                    ui.addToggle(
+                        name = layouts[index],
+                        data = layouts[index],
+                        isChecked = layouts[index] == currentLayout
+                    )
+                }
 
-            dialog.addToggle("Flip Side", flipSide) {
-                dialog.confirmButton?.opacity = 1f
-                flipSide = !flipSide
-            }
+                toggles.forEach { toggle ->
+                    toggle.onClick {
+                        currentLayout = toggle.customData as String
 
-            dialog.addToggle("Allow AI Retreat", aiRetreatAllowed) {
-                dialog.confirmButton?.opacity = 1f
-                aiRetreatAllowed = !aiRetreatAllowed
-            }
-
-            dialog.addToggle("Force Deploy All", forceDeployAll) {
-                dialog.confirmButton?.opacity = 1f
-                forceDeployAll = !forceDeployAll
-            }
-
-            dialog.onConfirm { _ ->
-                resetMission()
-
-                dialog.confirmButton?.opacity = 0f
-            }
-
-            val panelAPI = Global.getSettings().createCustom(missionDetail.position.width, missionDetail.position.height, dialog)
-            dialog.init(
-                panelAPI,
-                0f,
-                missionDetail.position.height,
-                parent = missionDetail,
-                isDialog = false
-            )
-            dialog.confirmButton?.opacity = 0f
-
-            val pad = 10f
-
-            fun addCommanderWithTooltip(
-                fleet: CampaignFleetAPI,
-                offsetX: Float,
-                offsetY: Float
-            ) {
-                val commanderImage = panelAPI.addImage(fleet.commander.portraitSprite, 64f, 64f)
-
-                commanderImage.position.setXAlignOffset(
-                    -commanderImage.position.x + missionOrderOfBattle.position.x - 32f - 12f + offsetX
-                )
-                commanderImage.position.setYAlignOffset(
-                    -commanderImage.position.y + missionOrderOfBattle.position.y + 32f + 16f + offsetY
-                )
-
-                commanderImage.uiImage.addTooltip(TooltipMakerAPI.TooltipLocation.LEFT, 280f) { tooltip ->
-                    val skills = fleet.commander.stats.skillsCopy
-                        .filter { it.skill.isAdmiralSkill && it.level > 0f }
-
-                    tooltip.addTitle(fleet.commander.nameString)
-
-                    tooltip.addSectionHeading("Commander Skills:", Alignment.MID, pad)
-
-                    for (skill in skills) {
-                        val skillImageWithText = tooltip.beginImageWithText(skill.skill.spriteName, 40f)
-                        skillImageWithText.addPara(skill.skill.name, 0f)
-                        tooltip.addImageWithText(pad)
+                        pickedLayout = layoutConfigChoices.first { it.optString("name") == currentLayout }
+                        toggles.forEach { it.isChecked = it.customData == currentLayout }
+                        dialog.confirmButton?.opacity = 1f
                     }
                 }
-            }
+
+                ui.addSpacer(buttonHeight + 4f)
+
+                ui.addToggle("Apply Officer Details HullMod", applyOfficerDetails) {
+                    dialog.confirmButton?.opacity = 1f
+                    applyOfficerDetails = !applyOfficerDetails
+                }
+
+                ui.addToggle("Speed Up", speedUp) {
+                    dialog.confirmButton?.opacity = 1f
+                    speedUp = !speedUp
+                }
+
+                ui.addToggle("Flip Side", flipSide) {
+                    dialog.confirmButton?.opacity = 1f
+                    flipSide = !flipSide
+                }
+
+                ui.addToggle("Allow AI Retreat", aiRetreatAllowed) {
+                    dialog.confirmButton?.opacity = 1f
+                    aiRetreatAllowed = !aiRetreatAllowed
+                }
+
+                ui.addToggle("Force Deploy All", forceDeployAll) {
+                    dialog.confirmButton?.opacity = 1f
+                    forceDeployAll = !forceDeployAll
+                }
+
+                dialog.onConfirm {
+                    resetMission()
+
+                    dialog.confirmButton?.opacity = 0f
+                }
+
+                val pad = 10f
+
+                fun addCommanderWithTooltip(
+                    fleet: CampaignFleetAPI,
+                    offsetX: Float,
+                    offsetY: Float
+                ) {
+                    val commanderImage = dialog.panel.addImage(fleet.commander.portraitSprite, 64f, 64f)
+                    //val commanderImage = ui.starfizAddImage(fleet.commander.portraitSprite, 64f, 64f)
+
+                    commanderImage.position.setXAlignOffset(
+                        -commanderImage.position.x + missionOrderOfBattle.position.x - 32f - 12f + offsetX
+                    )
+                    commanderImage.position.setYAlignOffset(
+                        -commanderImage.position.y + missionOrderOfBattle.position.y + 32f + 16f + offsetY
+                    )
+
+                    commanderImage.uiImage.addTooltip(TooltipMakerAPI.TooltipLocation.LEFT, 280f) { tooltip ->
+                        val skills = fleet.commander.stats.skillsCopy
+                            .filter { it.skill.isAdmiralSkill && it.level > 0f }
+
+                        tooltip.addTitle(fleet.commander.nameString)
+
+                        tooltip.addSectionHeading("Commander Skills:", Alignment.MID, pad)
+
+                        for (skill in skills) {
+                            val skillImageWithText = tooltip.beginImageWithText(skill.skill.spriteName, 40f)
+                            skillImageWithText.addPara(skill.skill.name, 0f)
+                            tooltip.addImageWithText(pad)
+                        }
+                    }
+                }
 
                 addCommanderWithTooltip(
                     playerFleet,
@@ -301,10 +309,19 @@ class MissionDefinition : MissionDefinitionPlugin {
                     offsetY = if(flipSide) 128f else -8f
                 )
 
+                dialog.setupConfirmCancelSection(confirmText = "Apply", alignment = Alignment.LMID, addCancelButton = false)
+                dialog.doesConfirmForceDismiss = false
+
+
+
+            }
+
+            dialog.confirmButton?.opacity = 0f
 
             missionDetail.bringComponentToTop(missionOrderOfBattle)
 
-            FBCBMissionListener.missionUI = panelAPI
+            FBCBMissionListener.missionUI = dialog.panel
+
         }
 
         // Choose fleet sides based on flipSide flag
