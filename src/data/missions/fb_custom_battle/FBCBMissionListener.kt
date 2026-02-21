@@ -25,9 +25,9 @@ internal class FBCBMissionListener : EveryFrameCombatPlugin {
     ) {
         if (missionUI == null) return
 
-        val coreUI = ReflectionMisc.getCoreUI() ?: return
+        val screenPanel = ReflectionMisc.getScreenPanel() ?: return
 
-        val missionThing = (coreUI.invoke("getChildrenCopy") as List<*>).find { it?.getMethodsMatching(name = "getMissionList")?.isNotEmpty() == true }
+        val missionThing = (screenPanel.invoke("getChildrenCopy") as List<*>).find { it?.getMethodsMatching(name = "getMissionList")?.isNotEmpty() == true }
         val missionDetail = missionThing?.invoke("getMissionDetail") as? UIPanelAPI ?: return
 
         val api = missionDetail.invoke("getPreview") as? MissionDefinitionAPI ?: return

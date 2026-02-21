@@ -2,7 +2,7 @@ package fleetBuilderCB
 
 import com.fs.starfarer.api.BaseModPlugin
 import com.fs.starfarer.api.Global
-import fleetBuilder.config.ModSettings.PRIMARYDIR
+import fleetBuilder.core.ModSettings.PRIMARYDIR
 import org.json.JSONObject
 
 const val customDir = (PRIMARYDIR + "CustomBattle/")

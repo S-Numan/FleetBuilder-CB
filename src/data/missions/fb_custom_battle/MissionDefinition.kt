@@ -16,15 +16,15 @@ import com.fs.starfarer.api.ui.Alignment
 import com.fs.starfarer.api.ui.TooltipMakerAPI
 import com.fs.starfarer.api.ui.UIPanelAPI
 import com.fs.starfarer.api.util.Misc
-import fleetBuilder.persistence.fleet.DataFleet.createCampaignFleetFromData
-import fleetBuilder.persistence.fleet.JSONFleet.extractFleetDataFromJson
-import fleetBuilder.persistence.person.DataPerson.copyPerson
-import fleetBuilder.ui.popUpUI.BasePopUpUI
-import fleetBuilder.util.DisplayMessage
+import fleetBuilder.core.displayMessage.DisplayMessage
+import fleetBuilder.serialization.fleet.DataFleet
+import fleetBuilder.serialization.fleet.JSONFleet
+import fleetBuilder.serialization.person.DataPerson
+import fleetBuilder.ui.customPanel.common.BasePopUpPanel
 import fleetBuilder.util.ReflectionMisc
+import fleetBuilder.util.VariantLib
 import fleetBuilder.util.addToggle
 import fleetBuilder.util.lib.ClipboardUtil.getClipboardJson
-import fleetBuilder.variants.VariantLib
 import fleetBuilderCB.customDir
 import fleetBuilderCB.defaultFleetFile
 import fleetBuilderCB.missionID
@@ -35,6 +35,7 @@ import starficz.ReflectionUtils.invoke
 import starficz.addImage
 import starficz.addTooltip
 import starficz.onClick
+import starficz.width
 import java.util.*
 
 
@@ -93,8 +94,8 @@ class MissionDefinition : MissionDefinitionPlugin {
     }
 
     private fun loadFleetFromJson(json: JSONObject, factionId: String): CampaignFleetAPI {
-        val data = extractFleetDataFromJson(json)
-        val fleet = createCampaignFleetFromData(
+        val data = JSONFleet.extractFleetDataFromJson(json)
+        val fleet = DataFleet.createCampaignFleetFromData(
             data.copy(factionID = factionId), true
         )
         for (member in fleet.fleetData.membersListCopy) {
@@ -127,9 +128,9 @@ class MissionDefinition : MissionDefinitionPlugin {
 
         // This UI is a terrible hack
         if(FBCBMissionListener.missionUI == null) {
-            val coreUI = ReflectionMisc.getCoreUI() ?: return
+            val screenPanel = ReflectionMisc.getScreenPanel() ?: return
 
-            val missionThing = (coreUI.invoke("getChildrenCopy") as List<*>).find { it?.getMethodsMatching(name = "getMissionList")?.isNotEmpty() == true }
+            val missionThing = (screenPanel.invoke("getChildrenCopy") as List<*>).find { it?.getMethodsMatching(name = "getMissionList")?.isNotEmpty() == true }
             val missionList = missionThing?.invoke("getMissionList")
             val missionDetail = missionThing?.invoke("getMissionDetail") as? UIPanelAPI ?: return
 
@@ -150,9 +151,14 @@ class MissionDefinition : MissionDefinitionPlugin {
 
             val buttonHeight = 24f
 
-            val dialog = BasePopUpUI(headerTitle = "Custom Battle Settings")
-            dialog.isDialog = false
-            dialog.onCreateUI(missionDetail.position.width, missionDetail.position.height, parent = missionDetail, x = 0f, y = missionDetail.position.height) { ui ->
+            val dialog = BasePopUpPanel(headerTitle = "Custom Battle Settings")
+            dialog.quitWithEscKey = false
+            dialog.dialogStyle = false
+            dialog.darkenBackground = false
+            dialog.consumeAllInput = false
+            dialog.backgroundAlphaMult = 1f
+
+            dialog.onCreateUI(missionDetail.position.width, missionDetail.position.height, parent = missionDetail, xOffset = 0f, yOffset = missionDetail.position.height) { ui ->
                 fun resetMission() {
                     //Reload UI
                     missionDetail.removeComponent(dialog.panel)
@@ -162,7 +168,7 @@ class MissionDefinition : MissionDefinitionPlugin {
                     missionList?.invoke("selectMission", missionID)
                 }
 
-                ui.addButton("Reset Settings", null, dialog.bufferedWidth, buttonHeight, 0f).onClick {
+                ui.addButton("Reset Settings", null, ui.width, buttonHeight, 0f).onClick {
                     init = false
 
                     resetMission()
@@ -170,7 +176,7 @@ class MissionDefinition : MissionDefinitionPlugin {
 
                 ui.addSpacer(buttonHeight)
 
-                ui.addButton("Click to assign clipboard to player fleet", null, dialog.bufferedWidth, buttonHeight, 0f).onClick {
+                ui.addButton("Click to assign clipboard to player fleet", null, ui.width, buttonHeight, 0f).onClick {
                     val clipboardJson = getClipboardJson()
                     if (clipboardJson == null || !clipboardJson.has("members")) {
                         DisplayMessage.showError("No valid fleet data found in clipboard")
@@ -181,7 +187,7 @@ class MissionDefinition : MissionDefinitionPlugin {
                     resetMission()
                     dialog.confirmButton?.opacity = 0f
                 }
-                ui.addButton("Click to assign clipboard to enemy fleet", null, dialog.bufferedWidth, buttonHeight, 0f).onClick {
+                ui.addButton("Click to assign clipboard to enemy fleet", null, ui.width, buttonHeight, 0f).onClick {
                     val clipboardJson = getClipboardJson()
                     if (clipboardJson == null || !clipboardJson.has("members")) {
                         DisplayMessage.showError("No valid fleet data found in clipboard")
@@ -311,10 +317,8 @@ class MissionDefinition : MissionDefinitionPlugin {
 
                 dialog.setupConfirmCancelSection(confirmText = "Apply", alignment = Alignment.LMID, addCancelButton = false)
                 dialog.doesConfirmForceDismiss = false
-
-
-
             }
+            dialog.setMaxSize()
 
             dialog.confirmButton?.opacity = 0f
 
@@ -410,7 +414,7 @@ class MissionDefinition : MissionDefinitionPlugin {
         //The commander must not be piloting a ship, otherwise the game crashes on entering the mission.
 
         //Make copy of commander, and assign them to be the commander
-        fleet.commander = copyPerson(fleet.commander)
+        fleet.commander = DataPerson.copyPerson(fleet.commander)
 
         var hasDefaultOfficer = false
 
