@@ -17,25 +17,25 @@ import com.fs.starfarer.api.ui.TooltipMakerAPI
 import com.fs.starfarer.api.ui.UIPanelAPI
 import com.fs.starfarer.api.util.Misc
 import fleetBuilder.core.displayMessage.DisplayMessage
+import fleetBuilder.otherMods.starficz.addImage
+import fleetBuilder.otherMods.starficz.addTooltip
+import fleetBuilder.otherMods.starficz.onClick
+import fleetBuilder.otherMods.starficz.width
 import fleetBuilder.serialization.fleet.DataFleet
 import fleetBuilder.serialization.fleet.JSONFleet
 import fleetBuilder.serialization.person.DataPerson
-import fleetBuilder.ui.customPanel.common.BasePopUpPanel
+import fleetBuilder.ui.customPanel.common.DialogPanel
 import fleetBuilder.util.ReflectionMisc
-import fleetBuilder.util.VariantLib
 import fleetBuilder.util.addToggle
+import fleetBuilder.util.api.VariantUtils
 import fleetBuilder.util.lib.ClipboardUtil.getClipboardJson
 import fleetBuilderCB.customDir
 import fleetBuilderCB.defaultFleetFile
 import fleetBuilderCB.missionID
 import org.json.JSONObject
 import org.lazywizard.lazylib.ext.json.iterator
-import starficz.ReflectionUtils.getMethodsMatching
-import starficz.ReflectionUtils.invoke
-import starficz.addImage
-import starficz.addTooltip
-import starficz.onClick
-import starficz.width
+import fleetBuilderCB.otherMods.starficz.ReflectionUtils.getMethodsMatching
+import fleetBuilderCB.otherMods.starficz.ReflectionUtils.invoke
 import java.util.*
 
 
@@ -151,14 +151,14 @@ class MissionDefinition : MissionDefinitionPlugin {
 
             val buttonHeight = 24f
 
-            val dialog = BasePopUpPanel(headerTitle = "Custom Battle Settings")
-            dialog.quitWithEscKey = false
+            val dialog = DialogPanel(headerTitle = "Custom Battle Settings")
+            dialog.allowHotkeyQuit = false
             dialog.dialogStyle = false
             dialog.darkenBackground = false
             dialog.consumeAllInput = false
-            dialog.backgroundAlphaMult = 1f
+            dialog.background.alphaMult = 1f
 
-            dialog.onCreateUI(missionDetail.position.width, missionDetail.position.height, parent = missionDetail, xOffset = 0f, yOffset = missionDetail.position.height) { ui ->
+            dialog.show(missionDetail.position.width, missionDetail.position.height, parent = missionDetail, xOffset = 0f, yOffset = missionDetail.position.height) { ui ->
                 fun resetMission() {
                     //Reload UI
                     missionDetail.removeComponent(dialog.panel)
@@ -315,8 +315,8 @@ class MissionDefinition : MissionDefinitionPlugin {
                     offsetY = if(flipSide) 128f else -8f
                 )
 
-                dialog.setupConfirmCancelSection(confirmText = "Apply", alignment = Alignment.LMID, addCancelButton = false)
-                dialog.doesConfirmForceDismiss = false
+                dialog.addActionButtons(confirmText = "Apply", alignment = Alignment.LMID, addCancelButton = false)
+                dialog.doesConfirmDismiss = false
             }
             dialog.setMaxSize()
 
@@ -357,7 +357,7 @@ class MissionDefinition : MissionDefinitionPlugin {
 
     private fun validateFleet(fleet: CampaignFleetAPI, fleetSide: FleetSide) {
         if (fleet.fleetSizeCount == 0) {
-            fleet.fleetData.addFleetMember(Global.getSettings().createFleetMember(FleetMemberType.SHIP, VariantLib.createErrorVariant()))
+            fleet.fleetData.addFleetMember(Global.getSettings().createFleetMember(FleetMemberType.SHIP, VariantUtils.createErrorVariant()))
             DisplayMessage.showError("Failed to create fleet on side ${fleetSide.name}")
         }
     }

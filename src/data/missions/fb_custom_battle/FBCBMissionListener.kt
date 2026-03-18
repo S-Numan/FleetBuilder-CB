@@ -9,9 +9,9 @@ import com.fs.starfarer.api.ui.CustomPanelAPI
 import com.fs.starfarer.api.ui.UIPanelAPI
 import fleetBuilder.util.ReflectionMisc
 import fleetBuilderCB.missionID
-import starficz.ReflectionUtils.getFieldsMatching
-import starficz.ReflectionUtils.getMethodsMatching
-import starficz.ReflectionUtils.invoke
+import fleetBuilderCB.otherMods.starficz.ReflectionUtils.getFieldsMatching
+import fleetBuilderCB.otherMods.starficz.ReflectionUtils.getMethodsMatching
+import fleetBuilderCB.otherMods.starficz.ReflectionUtils.invoke
 
 
 internal class FBCBMissionListener : EveryFrameCombatPlugin {
