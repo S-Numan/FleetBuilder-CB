@@ -155,7 +155,8 @@ class MissionDefinition : MissionDefinitionPlugin {
             dialog.allowHotkeyQuit = false
             dialog.dialogStyle = false
             dialog.darkenBackground = false
-            dialog.consumeAllInput = false
+            dialog.consumeMouseEvents = true
+            dialog.consumeAllEvents = false
             dialog.background.alphaMult = 1f
 
             dialog.show(missionDetail.position.width, missionDetail.position.height, parent = missionDetail, xOffset = 0f, yOffset = missionDetail.position.height) { ui ->
@@ -187,7 +188,7 @@ class MissionDefinition : MissionDefinitionPlugin {
                     resetMission()
                     dialog.confirmButton?.opacity = 0f
                 }
-                ui.addButton("Click to assign clipboard to enemy fleet", null, ui.width, buttonHeight, 0f).onClick {
+                ui.addButton("Click to assign clipboard to enemy fleet", null, ui.width, buttonHeight, 2f).onClick {
                     val clipboardJson = getClipboardJson()
                     if (clipboardJson == null || !clipboardJson.has("members")) {
                         DisplayMessage.showError("No valid fleet data found in clipboard")
@@ -240,27 +241,27 @@ class MissionDefinition : MissionDefinitionPlugin {
 
                 ui.addSpacer(buttonHeight + 4f)
 
-                ui.addToggle("Apply Officer Details HullMod", applyOfficerDetails) {
+                ui.addToggle("Apply Officer Details HullMod", applyOfficerDetails).onClick {
                     dialog.confirmButton?.opacity = 1f
                     applyOfficerDetails = !applyOfficerDetails
                 }
 
-                ui.addToggle("Speed Up", speedUp) {
+                ui.addToggle("Speed Up", speedUp).onClick {
                     dialog.confirmButton?.opacity = 1f
                     speedUp = !speedUp
                 }
 
-                ui.addToggle("Flip Side", flipSide) {
+                ui.addToggle("Flip Side", flipSide).onClick {
                     dialog.confirmButton?.opacity = 1f
                     flipSide = !flipSide
                 }
 
-                ui.addToggle("Allow AI Retreat", aiRetreatAllowed) {
+                ui.addToggle("Allow AI Retreat", aiRetreatAllowed).onClick {
                     dialog.confirmButton?.opacity = 1f
                     aiRetreatAllowed = !aiRetreatAllowed
                 }
 
-                ui.addToggle("Force Deploy All", forceDeployAll) {
+                ui.addToggle("Force Deploy All", forceDeployAll).onClick {
                     dialog.confirmButton?.opacity = 1f
                     forceDeployAll = !forceDeployAll
                 }
