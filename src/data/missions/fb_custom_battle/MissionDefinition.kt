@@ -26,8 +26,8 @@ import fleetBuilder.serialization.fleet.JSONFleet
 import fleetBuilder.serialization.person.DataPerson
 import fleetBuilder.ui.customPanel.common.DialogPanel
 import fleetBuilder.util.ReflectionMisc
-import fleetBuilder.util.addToggle
 import fleetBuilder.util.api.VariantUtils
+import fleetBuilder.util.kotlin.addCheckboxD
 import fleetBuilder.util.lib.ClipboardUtil.getClipboardJson
 import fleetBuilderCB.customDir
 import fleetBuilderCB.defaultFleetFile
@@ -155,7 +155,7 @@ class MissionDefinition : MissionDefinitionPlugin {
             dialog.allowHotkeyQuit = false
             dialog.dialogStyle = false
             dialog.darkenBackground = false
-            dialog.consumeMouseEvents = true
+            dialog.consumeInnerMouseEvents = true
             dialog.consumeAllEvents = false
             dialog.background.alphaMult = 1f
 
@@ -222,7 +222,7 @@ class MissionDefinition : MissionDefinitionPlugin {
                 var currentLayout = pickedLayout.optString("name")
                 val layouts = layoutConfigChoices.map { it.optString("name") }
                 val toggles = layouts.indices.map { index ->
-                    ui.addToggle(
+                    ui.addCheckboxD(
                         name = layouts[index],
                         data = layouts[index],
                         isChecked = layouts[index] == currentLayout
@@ -241,27 +241,27 @@ class MissionDefinition : MissionDefinitionPlugin {
 
                 ui.addSpacer(buttonHeight + 4f)
 
-                ui.addToggle("Apply Officer Details HullMod", applyOfficerDetails).onClick {
+                ui.addCheckboxD("Apply Officer Details HullMod", applyOfficerDetails).onClick {
                     dialog.confirmButton?.opacity = 1f
                     applyOfficerDetails = !applyOfficerDetails
                 }
 
-                ui.addToggle("Speed Up", speedUp).onClick {
+                ui.addCheckboxD("Speed Up", speedUp).onClick {
                     dialog.confirmButton?.opacity = 1f
                     speedUp = !speedUp
                 }
 
-                ui.addToggle("Flip Side", flipSide).onClick {
+                ui.addCheckboxD("Flip Side", flipSide).onClick {
                     dialog.confirmButton?.opacity = 1f
                     flipSide = !flipSide
                 }
 
-                ui.addToggle("Allow AI Retreat", aiRetreatAllowed).onClick {
+                ui.addCheckboxD("Allow AI Retreat", aiRetreatAllowed).onClick {
                     dialog.confirmButton?.opacity = 1f
                     aiRetreatAllowed = !aiRetreatAllowed
                 }
 
-                ui.addToggle("Force Deploy All", forceDeployAll).onClick {
+                ui.addCheckboxD("Force Deploy All", forceDeployAll).onClick {
                     dialog.confirmButton?.opacity = 1f
                     forceDeployAll = !forceDeployAll
                 }
