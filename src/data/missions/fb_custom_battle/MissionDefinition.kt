@@ -24,10 +24,10 @@ import fleetBuilder.otherMods.starficz.width
 import fleetBuilder.serialization.fleet.DataFleet
 import fleetBuilder.serialization.fleet.JSONFleet
 import fleetBuilder.serialization.person.DataPerson
+import fleetBuilder.ui.addCheckboxD
 import fleetBuilder.ui.customPanel.common.DialogPanel
 import fleetBuilder.util.ReflectionMisc
 import fleetBuilder.util.api.VariantUtils
-import fleetBuilder.util.kotlin.addCheckboxD
 import fleetBuilder.util.lib.ClipboardUtil.getClipboardJson
 import fleetBuilderCB.customDir
 import fleetBuilderCB.defaultFleetFile
@@ -415,7 +415,7 @@ class MissionDefinition : MissionDefinitionPlugin {
         //The commander must not be piloting a ship, otherwise the game crashes on entering the mission.
 
         //Make copy of commander, and assign them to be the commander
-        fleet.commander = DataPerson.copyPerson(fleet.commander)
+        fleet.commander = DataPerson.clonePerson(fleet.commander)
 
         var hasDefaultOfficer = false
 
