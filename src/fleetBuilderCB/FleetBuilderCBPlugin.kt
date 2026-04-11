@@ -2,10 +2,10 @@ package fleetBuilderCB
 
 import com.fs.starfarer.api.BaseModPlugin
 import com.fs.starfarer.api.Global
-import fleetBuilder.core.FBSettings.PRIMARYDIR
+import fleetBuilder.core.FBConst
 import org.json.JSONObject
 
-const val customDir = (PRIMARYDIR + "CustomBattle/")
+const val customDir = (FBConst.PRIMARY_DIR + "CustomBattle/")
 const val defaultFleetFile = "defaultFleets"
 const val missionID = "fb_custom_battle"
 

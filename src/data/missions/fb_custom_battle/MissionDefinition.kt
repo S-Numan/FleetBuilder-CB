@@ -21,6 +21,8 @@ import fleetBuilder.otherMods.starficz.addImage
 import fleetBuilder.otherMods.starficz.addTooltip
 import fleetBuilder.otherMods.starficz.onClick
 import fleetBuilder.otherMods.starficz.width
+import fleetBuilder.serialization.SerializationUtils
+import fleetBuilder.serialization.fleet.CompressedFleet
 import fleetBuilder.serialization.fleet.DataFleet
 import fleetBuilder.serialization.fleet.JSONFleet
 import fleetBuilder.serialization.person.DataPerson
@@ -28,14 +30,14 @@ import fleetBuilder.ui.addCheckboxD
 import fleetBuilder.ui.customPanel.common.DialogPanel
 import fleetBuilder.util.ReflectionMisc
 import fleetBuilder.util.api.VariantUtils
-import fleetBuilder.util.lib.ClipboardUtil.getClipboardJson
+import fleetBuilder.util.lib.ClipboardUtil
 import fleetBuilderCB.customDir
 import fleetBuilderCB.defaultFleetFile
 import fleetBuilderCB.missionID
-import org.json.JSONObject
-import org.lazywizard.lazylib.ext.json.iterator
 import fleetBuilderCB.otherMods.starficz.ReflectionUtils.getMethodsMatching
 import fleetBuilderCB.otherMods.starficz.ReflectionUtils.invoke
+import org.json.JSONObject
+import org.lazywizard.lazylib.ext.json.iterator
 import java.util.*
 
 
@@ -49,8 +51,8 @@ class MissionDefinition : MissionDefinitionPlugin {
         private var pickedLayout = JSONObject()
         private var layoutConfigChoices = mutableListOf<JSONObject>()
         private var defaultCR = true
-        private var playerFleetJson: JSONObject = JSONObject()
-        private var enemyFleetJson: JSONObject = JSONObject()
+        private var playerFleetData: DataFleet.ParsedFleetData? = null
+        private var enemyFleetData: DataFleet.ParsedFleetData? = null
         private var init = false
         private var forceDeployAll = true
         private var applyOfficerDetails = true
@@ -73,8 +75,10 @@ class MissionDefinition : MissionDefinitionPlugin {
         try {
             val defaultFleetsJson = Global.getSettings().readJSONFromCommon(customDir + defaultFleetFile, false)
 
-            playerFleetJson = Global.getSettings().loadJSON(defaultFleetsJson.getString("firstFleet"))
-            enemyFleetJson = Global.getSettings().loadJSON(defaultFleetsJson.getString("secondFleet"))
+            val firstFleetJSON = Global.getSettings().loadJSON(defaultFleetsJson.getString("firstFleet"))
+            val secondFleetJSON = Global.getSettings().loadJSON(defaultFleetsJson.getString("secondFleet"))
+            playerFleetData = SerializationUtils.extractDataFromAny(firstFleetJSON) as DataFleet.ParsedFleetData
+            enemyFleetData = SerializationUtils.extractDataFromAny(secondFleetJSON) as DataFleet.ParsedFleetData
         } catch (_: Exception) {
         }
 
@@ -93,10 +97,12 @@ class MissionDefinition : MissionDefinitionPlugin {
         init = true
     }
 
-    private fun loadFleetFromJson(json: JSONObject, factionId: String): CampaignFleetAPI {
-        val data = JSONFleet.extractFleetDataFromJson(json)
+    private fun loadFleetFromData(inputData: Any?, factionId: String): CampaignFleetAPI {
+        if(inputData !is DataFleet.ParsedFleetData)
+            throw Exception("Fail")
+
         val fleet = DataFleet.createCampaignFleetFromData(
-            data.copy(factionID = factionId), true
+            inputData.copy(factionID = factionId), true
         )
         for (member in fleet.fleetData.membersListCopy) {
             //val clone = member.variant.clone()
@@ -118,8 +124,8 @@ class MissionDefinition : MissionDefinitionPlugin {
         }
 
         // Load fleets
-        val playerFleet = loadFleetFromJson(playerFleetJson, Factions.PLAYER)
-        val enemyFleet = loadFleetFromJson(enemyFleetJson, Factions.PLAYER)
+        val playerFleet = loadFleetFromData(playerFleetData, Factions.PLAYER)
+        val enemyFleet = loadFleetFromData(enemyFleetData, Factions.PLAYER)
 
         // Validate fleets
         validateFleet(playerFleet, FleetSide.PLAYER)
@@ -178,22 +184,22 @@ class MissionDefinition : MissionDefinitionPlugin {
                 ui.addSpacer(buttonHeight)
 
                 ui.addButton("Click to assign clipboard to player fleet", null, ui.width, buttonHeight, 0f).onClick {
-                    val clipboardJson = getClipboardJson()
-                    if (clipboardJson == null || !clipboardJson.has("members")) {
+                    val data = ClipboardUtil.getClipboardContentsAutoJSON()?.let { SerializationUtils.extractDataFromAny(it) as? DataFleet.ParsedFleetData }
+                    if(data !is DataFleet.ParsedFleetData) {
                         DisplayMessage.showError("No valid fleet data found in clipboard")
                     } else {
-                        playerFleetJson = clipboardJson
+                        playerFleetData = data
                     }
 
                     resetMission()
                     dialog.confirmButton?.opacity = 0f
                 }
-                ui.addButton("Click to assign clipboard to enemy fleet", null, ui.width, buttonHeight, 2f).onClick {
-                    val clipboardJson = getClipboardJson()
-                    if (clipboardJson == null || !clipboardJson.has("members")) {
+                ui.addButton("Click to assign clipboard to enemy fleet", null, ui.width, buttonHeight, 0f).onClick {
+                    val data = ClipboardUtil.getClipboardContentsAutoJSON()?.let { SerializationUtils.extractDataFromAny(it) as? DataFleet.ParsedFleetData }
+                    if(data !is DataFleet.ParsedFleetData) {
                         DisplayMessage.showError("No valid fleet data found in clipboard")
                     } else {
-                        enemyFleetJson = clipboardJson
+                        enemyFleetData = data
                     }
 
                     resetMission()
@@ -332,9 +338,21 @@ class MissionDefinition : MissionDefinitionPlugin {
         // Choose fleet sides based on flipSide flag
         val (playerSide, enemySide) = if (!flipSide) FleetSide.PLAYER to FleetSide.ENEMY else FleetSide.ENEMY to FleetSide.PLAYER
 
+        val playerFleetJson = JSONObject().apply {
+            put("useAdmiralAI", true)
+            put("autoSortShips", true)
+            put("automatedPenalty", false)
+        }
+        val enemyFleetJson = JSONObject().apply {
+            put("useAdmiralAI", true)
+            put("autoSortShips", true)
+            put("automatedPenalty", false)
+        }
+
+
         // Generate fleets
-        generateAPIFleet(api, playerFleet, playerSide, playerFleetJson.optInt("aggression_doctrine", 2), playerFleetJson.optBoolean("useAdmiralAI", true), playerFleetJson.optBoolean("autoSortShips", true), playerFleetJson.optBoolean("automatedPenalty", false))
-        generateAPIFleet(api, enemyFleet, enemySide, enemyFleetJson.optInt("aggression_doctrine", 2), enemyFleetJson.optBoolean("useAdmiralAI", true), enemyFleetJson.optBoolean("autoSortShips", true), enemyFleetJson.optBoolean("automatedPenalty", false))
+        generateAPIFleet(api, playerFleet, playerSide, playerFleetData!!.aggression, playerFleetJson.optBoolean("useAdmiralAI", true), playerFleetJson.optBoolean("autoSortShips", true), playerFleetJson.optBoolean("automatedPenalty", false))
+        generateAPIFleet(api, enemyFleet, enemySide, enemyFleetData!!.aggression, enemyFleetJson.optBoolean("useAdmiralAI", true), enemyFleetJson.optBoolean("autoSortShips", true), enemyFleetJson.optBoolean("automatedPenalty", false))
 
         playerFleetJson.put("mapHeightMult", pickedLayout.getDouble("mapHeightMult"))
         enemyFleetJson.put("mapHeightMult", pickedLayout.getDouble("mapHeightMult"))
@@ -389,7 +407,7 @@ class MissionDefinition : MissionDefinitionPlugin {
         api: MissionDefinitionAPI,
         fleet: CampaignFleetAPI,
         side: FleetSide,
-        aggression: Int = 2,
+        aggression: Int = -1,
         useAdmiralAI: Boolean,
         autoSortShips: Boolean,
         automatedPenalty: Boolean
@@ -440,7 +458,7 @@ class MissionDefinition : MissionDefinitionPlugin {
 
             if (aggression == 1) {
                 doctrine = "CAUT"
-            } else if (aggression == 2) {
+            } else if (aggression == 2 || aggression == -1) {
                 doctrine = "STDY"
             } else if (aggression == 3) {
                 doctrine = "AGGR"
