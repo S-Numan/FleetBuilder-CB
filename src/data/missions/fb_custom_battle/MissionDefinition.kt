@@ -41,6 +41,8 @@ import org.lazywizard.lazylib.ext.json.iterator
 import java.util.*
 
 
+// Be advised, the content of this file is extreme jank and is not at all maintained properly. It should honestly be rewritten.
+
 class MissionDefinition : MissionDefinitionPlugin {
     companion object {
         private var speedUp = false
@@ -102,8 +104,8 @@ class MissionDefinition : MissionDefinitionPlugin {
             throw Exception("Fail")
 
         val fleet = DataFleet.createCampaignFleetFromData(
-            inputData.copy(factionID = factionId), true
-        )
+            inputData.copy(factionID = factionId), true)
+
         for (member in fleet.fleetData.membersListCopy) {
             //val clone = member.variant.clone()
             //clone.hullVariantId += "_clone"
@@ -144,7 +146,7 @@ class MissionDefinition : MissionDefinitionPlugin {
                 ?: return
             val yourFlagship = (missionDetail.invoke("getChildrenCopy") as List<*>).find { it?.getMethodsMatching(name = "setVariant")?.isNotEmpty() == true } as? UIPanelAPI
                 ?: return
-            yourFlagship.invoke("setOpacity", 0f)
+            //yourFlagship.invoke("setOpacity", 0f)
 
             /*val detailChildren = missionDetail.invoke("getChildrenCopy") as List<*>
             detailChildren.getOrNull(0)?.invoke("setOpacity", 0f)//Title
@@ -340,19 +342,18 @@ class MissionDefinition : MissionDefinitionPlugin {
 
         val playerFleetJson = JSONObject().apply {
             put("useAdmiralAI", true)
-            put("autoSortShips", true)
+            put("autoSortShips", false)
             put("automatedPenalty", false)
         }
         val enemyFleetJson = JSONObject().apply {
             put("useAdmiralAI", true)
-            put("autoSortShips", true)
+            put("autoSortShips", false)
             put("automatedPenalty", false)
         }
 
-
         // Generate fleets
-        generateAPIFleet(api, playerFleet, playerSide, playerFleetData!!.aggression, playerFleetJson.optBoolean("useAdmiralAI", true), playerFleetJson.optBoolean("autoSortShips", true), playerFleetJson.optBoolean("automatedPenalty", false))
-        generateAPIFleet(api, enemyFleet, enemySide, enemyFleetData!!.aggression, enemyFleetJson.optBoolean("useAdmiralAI", true), enemyFleetJson.optBoolean("autoSortShips", true), enemyFleetJson.optBoolean("automatedPenalty", false))
+        generateAPIFleet(api, playerFleet, playerSide, playerFleetData!!.aggression, playerFleetJson.optBoolean("useAdmiralAI", true), playerFleetJson.optBoolean("autoSortShips", false), playerFleetJson.optBoolean("automatedPenalty", false))
+        generateAPIFleet(api, enemyFleet, enemySide, enemyFleetData!!.aggression, enemyFleetJson.optBoolean("useAdmiralAI", true), enemyFleetJson.optBoolean("autoSortShips", false), enemyFleetJson.optBoolean("automatedPenalty", false))
 
         playerFleetJson.put("mapHeightMult", pickedLayout.getDouble("mapHeightMult"))
         enemyFleetJson.put("mapHeightMult", pickedLayout.getDouble("mapHeightMult"))
@@ -453,21 +454,14 @@ class MissionDefinition : MissionDefinitionPlugin {
                 hasDefaultOfficer = true
         }
 
-        if (hasDefaultOfficer) {
-            val doctrine: String
-
-            if (aggression == 1) {
-                doctrine = "CAUT"
-            } else if (aggression == 2 || aggression == -1) {
-                doctrine = "STDY"
-            } else if (aggression == 3) {
-                doctrine = "AGGR"
-            } else if (aggression == 4) {
-                doctrine = "A/R"
-            } else if (aggression == 5) {
-                doctrine = "RECK"
-            } else {
-                doctrine = "UNKO"
+        if (hasDefaultOfficer && aggression >= 0) {
+            val doctrine: String = when (aggression) {
+                1 -> { "CAUT" }
+                2 -> { "STDY" }
+                3 -> { "AGGR" }
+                4 -> { "A/R" }
+                5 -> { "RECK" }
+                else -> { "" }
             }
 
             api.setFleetTagline(
