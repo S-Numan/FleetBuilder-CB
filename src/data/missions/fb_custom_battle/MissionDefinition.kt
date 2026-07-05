@@ -16,18 +16,16 @@ import com.fs.starfarer.api.ui.Alignment
 import com.fs.starfarer.api.ui.TooltipMakerAPI
 import com.fs.starfarer.api.ui.UIPanelAPI
 import com.fs.starfarer.api.util.Misc
-import fleetBuilder.core.displayMessage.DisplayMessage
+import fleetBuilder.core.util.DisplayMessage
 import fleetBuilder.otherMods.starficz.addImage
 import fleetBuilder.otherMods.starficz.addTooltip
 import fleetBuilder.otherMods.starficz.onClick
 import fleetBuilder.otherMods.starficz.width
 import fleetBuilder.serialization.SerializationUtils
-import fleetBuilder.serialization.fleet.CompressedFleet
 import fleetBuilder.serialization.fleet.DataFleet
-import fleetBuilder.serialization.fleet.JSONFleet
 import fleetBuilder.serialization.person.DataPerson
 import fleetBuilder.ui.addCheckboxD
-import fleetBuilder.ui.customPanel.common.DialogPanel
+import fleetBuilder.ui.customPanel.patterns.DialogPanel
 import fleetBuilder.util.ReflectionMisc
 import fleetBuilder.util.api.VariantUtils
 import fleetBuilder.util.lib.ClipboardUtil
@@ -327,7 +325,7 @@ class MissionDefinition : MissionDefinitionPlugin {
                 dialog.addActionButtons(confirmText = "Apply", alignment = Alignment.LMID, addCancelButton = false)
                 dialog.doesConfirmDismiss = false
             }
-            dialog.setMaxSize()
+            dialog.finishAnimation()
 
             dialog.confirmButton?.opacity = 0f
 
